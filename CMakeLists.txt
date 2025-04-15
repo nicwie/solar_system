@@ -25,16 +25,16 @@ if(NOT GLEW_FOUND)
 endif()
 
 # Add executable
-add_executable(YourOpenGLProgram main.cpp) # Replace main.cpp with your source
-                                           # files
+add_executable(solar_system main.cpp) # Replace main.cpp with your source
+# files
 
 # Link libraries
-target_link_libraries(YourOpenGLProgram OpenGL::GL glfw GLEW::GLEW)
+target_link_libraries(solar_system OpenGL::GL glfw GLEW::GLEW)
 
 # Optional: Set up include directories if find_package doesn't do it
 # automatically
-target_include_directories(YourOpenGLProgram PRIVATE ${GLFW_INCLUDE_DIRS}
-                                                     ${GLEW_INCLUDE_DIRS})
+target_include_directories(solar_system PRIVATE ${GLFW_INCLUDE_DIRS}
+                                                ${GLEW_INCLUDE_DIRS})
 
 # Optional: Copy necessary assets (shaders, textures, etc.) to the build
 # directory configure_file(path/to/your/asset.txt ${CMAKE_BINARY_DIR}/asset.txt
