@@ -1,0 +1,7 @@
+# C++ K&R style
+[*.{c,cpp,h,hpp}]
+indent_style = space
+indent_size = 4
+brace_style = end_of_line # or end_of_line_no_space
+insert_final_newline = true
+trailing_space = false
