@@ -33,7 +33,7 @@ GLenum glCheckError_(const char *file, int line) {
     }
     return errorCode;
 }
-#define glCheckError() glCheckError_(__FILE__, __LINE__) 
+#define glCheckError() glCheckError_(__FILE__, __LINE__)
 
 
 // This is our vertex shader: only passes the data over, but is needed in Opengl
@@ -56,7 +56,7 @@ const char *fragmentShaderSource = "#version 330 core\n"
 /**
  * @brief  Checks what keys were pressed and decides what to do with them
  *
- * @param[in] window [Window to check for]
+ * @param[in] window Window to check for
  */
 void processInput(GLFWwindow *window)
 {
@@ -68,7 +68,7 @@ void processInput(GLFWwindow *window)
 
         if (polygonMode == GL_FILL)
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        else 
+        else
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
 }
@@ -76,9 +76,9 @@ void processInput(GLFWwindow *window)
 /**
  * @brief Function to call when the window size changes so that our vieport keeps the correct size
  *
- * @param[in] window [TODO:description]
- * @param[in] width [TODO:description]
- * @param[in] height [TODO:description]
+ * @param[in] window Window to change
+ * @param[in] width width to which we schould change to
+ * @param[in] height height to which we should change to
  */
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);

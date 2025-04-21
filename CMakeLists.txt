@@ -40,3 +40,11 @@ target_include_directories(solar_system PRIVATE ${GLFW_INCLUDE_DIRS}
 # directory configure_file(path/to/your/asset.txt ${CMAKE_BINARY_DIR}/asset.txt
 # COPYONLY) target_include_directories(YourOpenGLProgram PRIVATE
 # ${CMAKE_BINARY_DIR})
+
+# add target that runs the program after it is built
+add_custom_target(
+  run_solar_system
+  COMMAND $<TARGET_FILE:solar_system>
+  DEPENDS solar_system
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR} # Optional: Set working directory
+  COMMENT "Running solar_system...")
