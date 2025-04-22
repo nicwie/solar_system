@@ -37,7 +37,18 @@ GLenum glCheckError_(const char *file, int line) {
 
 
 // This is our vertex shader: only passes the data over, but is needed in Opengl
-const char *vertexShaderSource = "#version 330 core\n"
+const char *vertexShaderSourceTri2 = "#version 330 core\n"
+    "layout (location = 0) in vec3 aPos;\n"
+    "layout (location = 1) in vec3 aColor;\n"
+    "out vec3 ourColor;\n"
+    "void main()\n"
+    "{\n"
+    "   gl_Position = vec4(aPos, 1.0);\n"
+    "   ourColor = aColor;\n"
+    "}\0";
+
+
+const char *vertexShaderSourceTri1 = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "void main()\n"
     "{\n"
@@ -45,15 +56,15 @@ const char *vertexShaderSource = "#version 330 core\n"
     "}\0";
 
 // Same for our fragment shader: This **must** be set, and here only colors whatever passes through
-const char *fragmentShaderSourceTri1 = "#version 330 core\n"
+const char *fragmentShaderSourceTri2 = "#version 330 core\n"
     "out vec4 FragColor;\n"
-    "uniform vec4 ourColor;\n"
+    "in vec3 ourColor;\n"
     "void main()\n"
     "{\n"
-    "   FragColor = ourColor;\n"
+    "   FragColor = vec4(ourColor, 1.0);\n"
     "}\0";
 
-const char *fragmentShaderSourceTri2 = "#version 330 core\n"
+const char *fragmentShaderSourceTri1 = "#version 330 core\n"
     "out vec4 FragColor;\n"
     "void main()\n"
     "{\n"
@@ -139,19 +150,19 @@ int main(void) {
 
 
     // This actually compiles the vertex shader we defined above
-    unsigned int vertexShader;
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    unsigned int vertexShaderTri1;
+    vertexShaderTri1 = glCreateShader(GL_VERTEX_SHADER);
 
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
+    glShaderSource(vertexShaderTri1, 1, &vertexShaderSourceTri1, NULL);
+    glCompileShader(vertexShaderTri1);
 
     // This is for compile time errors in shader compilation
     int  success;
     char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    glGetShaderiv(vertexShaderTri1, GL_COMPILE_STATUS, &success);
 
     if(!success) {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        glGetShaderInfoLog(vertexShaderTri1, 512, NULL, infoLog);
         std::cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
 
@@ -171,7 +182,7 @@ int main(void) {
     unsigned int shaderProgramTri1;
     shaderProgramTri1 = glCreateProgram();
 
-    glAttachShader(shaderProgramTri1, vertexShader);
+    glAttachShader(shaderProgramTri1, vertexShaderTri1);
     glAttachShader(shaderProgramTri1, fragmentShaderTri1);
     glLinkProgram(shaderProgramTri1);
 
@@ -182,6 +193,22 @@ int main(void) {
     }
 
     // Now we create a second shader for the other triangle, which we want in a different color
+
+
+    unsigned int vertexShaderTri2;
+    vertexShaderTri2 = glCreateShader(GL_VERTEX_SHADER);
+
+    glShaderSource(vertexShaderTri2, 1, &vertexShaderSourceTri2, NULL);
+    glCompileShader(vertexShaderTri2);
+
+    // This is for compile time errors in shader compilation
+    glGetShaderiv(vertexShaderTri2, GL_COMPILE_STATUS, &success);
+
+    if(!success) {
+        glGetShaderInfoLog(vertexShaderTri2, 512, NULL, infoLog);
+        std::cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+
     unsigned int fragmentShaderTri2;
     fragmentShaderTri2 = glCreateShader(GL_FRAGMENT_SHADER);
 
@@ -198,7 +225,7 @@ int main(void) {
     unsigned int shaderProgramTri2;
     shaderProgramTri2 = glCreateProgram();
 
-    glAttachShader(shaderProgramTri2, vertexShader);
+    glAttachShader(shaderProgramTri2, vertexShaderTri2);
     glAttachShader(shaderProgramTri2, fragmentShaderTri2);
     glLinkProgram(shaderProgramTri2);
 
@@ -209,7 +236,8 @@ int main(void) {
     }
 
     // Now that we have compiled and linked, we do not need the shaders anymore
-    glDeleteShader(vertexShader);
+    glDeleteShader(vertexShaderTri1);
+    glDeleteShader(vertexShaderTri2);
     glDeleteShader(fragmentShaderTri1);
     glDeleteShader(fragmentShaderTri2);
 
@@ -220,10 +248,12 @@ int main(void) {
         -0.5f, -0.5f, 0.0f,  // bottom left, triangle 1
     };
 
+    // this triangle has colors as well
     float verticesTri2[] = {
-        -0.6f,  0.5f, 0.0f,  // top left, triangle 2
-        -0.6f, -0.5f, 0.0f,  // bottom left, triangle 2
-         0.4f,  0.5f, 0.0f   // top right, triangle 2
+        // position          //colors
+        -0.6f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f, // top left, triangle 2
+        -0.6f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f, // bottom left, triangle 2
+         0.4f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f  // top right, triangle 2
     };
 
     GLuint VBOTri1, VAOTri1;
@@ -240,6 +270,7 @@ int main(void) {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
+    glCheckError();
 
     // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
     // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
@@ -253,9 +284,15 @@ int main(void) {
     glBindBuffer(GL_ARRAY_BUFFER, VBOTri2);
     glBufferData(GL_ARRAY_BUFFER, sizeof(verticesTri2), verticesTri2, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) 0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
+    glUseProgram(shaderProgramTri2);
+
+    glCheckError();
 
     // uncomment this call to draw in wireframe polygons.
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -268,17 +305,11 @@ int main(void) {
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(shaderProgramTri1);
-        
-        // Use Tri1 Shader uniform to change color over time
-        float timeValue = glfwGetTime();
-        float greenValue = sin(timeValue) / 2.0f + 0.5f;
-        int vertexColorLocation = glGetUniformLocation(shaderProgramTri1, "ourColor");
-        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
-        glBindVertexArray(VAOTri2);
+        glBindVertexArray(VAOTri1);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glUseProgram(shaderProgramTri2);
-        glBindVertexArray(VAOTri1);
+        glBindVertexArray(VAOTri2);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glBindVertexArray(0);
 
