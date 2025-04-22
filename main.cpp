@@ -44,12 +44,13 @@ const char *vertexShaderSource = "#version 330 core\n"
     "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
     "}\0";
 
-// Same for our fragment shader
+// Same for our fragment shader: This **must** be set, and here only colors whatever passes through
 const char *fragmentShaderSourceTri1 = "#version 330 core\n"
     "out vec4 FragColor;\n"
+    "uniform vec4 ourColor;\n"
     "void main()\n"
     "{\n"
-    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+    "   FragColor = ourColor;\n"
     "}\0";
 
 const char *fragmentShaderSourceTri2 = "#version 330 core\n"
@@ -267,6 +268,13 @@ int main(void) {
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(shaderProgramTri1);
+        
+        // Use Tri1 Shader uniform to change color over time
+        float timeValue = glfwGetTime();
+        float greenValue = sin(timeValue) / 2.0f + 0.5f;
+        int vertexColorLocation = glGetUniformLocation(shaderProgramTri1, "ourColor");
+        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
         glBindVertexArray(VAOTri2);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glUseProgram(shaderProgramTri2);
