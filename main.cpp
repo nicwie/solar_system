@@ -7,6 +7,7 @@
 #include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
+#include "Shader.hpp"
 
 
 /**
@@ -36,18 +37,6 @@ GLenum glCheckError_(const char *file, int line) {
 #define glCheckError() glCheckError_(__FILE__, __LINE__)
 
 
-// This is our vertex shader: only passes the data over, but is needed in Opengl
-const char *vertexShaderSourceTri2 = "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "layout (location = 1) in vec3 aColor;\n"
-    "out vec3 ourColor;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(aPos, 1.0);\n"
-    "   ourColor = aColor;\n"
-    "}\0";
-
-
 const char *vertexShaderSourceTri1 = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "void main()\n"
@@ -56,14 +45,6 @@ const char *vertexShaderSourceTri1 = "#version 330 core\n"
     "}\0";
 
 // Same for our fragment shader: This **must** be set, and here only colors whatever passes through
-const char *fragmentShaderSourceTri2 = "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "in vec3 ourColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = vec4(ourColor, 1.0);\n"
-    "}\0";
-
 const char *fragmentShaderSourceTri1 = "#version 330 core\n"
     "out vec4 FragColor;\n"
     "void main()\n"
@@ -148,149 +129,35 @@ int main(void) {
     // Background color (here , Black)
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
-
-    // This actually compiles the vertex shader we defined above
-    unsigned int vertexShaderTri1;
-    vertexShaderTri1 = glCreateShader(GL_VERTEX_SHADER);
-
-    glShaderSource(vertexShaderTri1, 1, &vertexShaderSourceTri1, NULL);
-    glCompileShader(vertexShaderTri1);
-
-    // This is for compile time errors in shader compilation
-    int  success;
-    char infoLog[512];
-    glGetShaderiv(vertexShaderTri1, GL_COMPILE_STATUS, &success);
-
-    if(!success) {
-        glGetShaderInfoLog(vertexShaderTri1, 512, NULL, infoLog);
-        std::cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    unsigned int fragmentShaderTri1;
-    fragmentShaderTri1 = glCreateShader(GL_FRAGMENT_SHADER);
-
-    glShaderSource(fragmentShaderTri1, 1, &fragmentShaderSourceTri1, NULL);
-    glCompileShader(fragmentShaderTri1);
-
-    glGetShaderiv(fragmentShaderTri1, GL_COMPILE_STATUS, &success);
-
-    if(!success) {
-        glGetShaderInfoLog(fragmentShaderTri1, 512, NULL, infoLog);
-        std::cerr << "ERROR::SHADER::FRAGMENT1::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    unsigned int shaderProgramTri1;
-    shaderProgramTri1 = glCreateProgram();
-
-    glAttachShader(shaderProgramTri1, vertexShaderTri1);
-    glAttachShader(shaderProgramTri1, fragmentShaderTri1);
-    glLinkProgram(shaderProgramTri1);
-
-    glGetProgramiv(shaderProgramTri1, GL_LINK_STATUS, &success);
-    if(!success) {
-        glGetProgramInfoLog(shaderProgramTri1, 512, NULL, infoLog);
-        std::cerr << "ERROR::SHADER::PROGRAM1::LINKING_FAILED\n" << infoLog << std::endl;
-    }
-
-    // Now we create a second shader for the other triangle, which we want in a different color
-
-
-    unsigned int vertexShaderTri2;
-    vertexShaderTri2 = glCreateShader(GL_VERTEX_SHADER);
-
-    glShaderSource(vertexShaderTri2, 1, &vertexShaderSourceTri2, NULL);
-    glCompileShader(vertexShaderTri2);
-
-    // This is for compile time errors in shader compilation
-    glGetShaderiv(vertexShaderTri2, GL_COMPILE_STATUS, &success);
-
-    if(!success) {
-        glGetShaderInfoLog(vertexShaderTri2, 512, NULL, infoLog);
-        std::cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    unsigned int fragmentShaderTri2;
-    fragmentShaderTri2 = glCreateShader(GL_FRAGMENT_SHADER);
-
-    glShaderSource(fragmentShaderTri2, 1, &fragmentShaderSourceTri2, NULL);
-    glCompileShader(fragmentShaderTri2);
-
-    glGetShaderiv(fragmentShaderTri2, GL_COMPILE_STATUS, &success);
-
-    if(!success) {
-        glGetShaderInfoLog(fragmentShaderTri2, 512, NULL, infoLog);
-        std::cerr << "ERROR::SHADER:FRAGMENT2::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    unsigned int shaderProgramTri2;
-    shaderProgramTri2 = glCreateProgram();
-
-    glAttachShader(shaderProgramTri2, vertexShaderTri2);
-    glAttachShader(shaderProgramTri2, fragmentShaderTri2);
-    glLinkProgram(shaderProgramTri2);
-
-    glGetProgramiv(shaderProgramTri2, GL_LINK_STATUS, &success);
-    if(!success) {
-        glGetProgramInfoLog(shaderProgramTri2, 512, NULL, infoLog);
-        std::cerr << "ERROR::SHADER::PROGRAM2::LINKING_FAILED\n" << infoLog << std::endl;
-    }
-
-    // Now that we have compiled and linked, we do not need the shaders anymore
-    glDeleteShader(vertexShaderTri1);
-    glDeleteShader(vertexShaderTri2);
-    glDeleteShader(fragmentShaderTri1);
-    glDeleteShader(fragmentShaderTri2);
-
-    // test triangle
-    float verticesTri1[] = {
-         0.5f,  0.5f, 0.0f,  // top right, triangle 1
-         0.5f, -0.5f, 0.0f,  // bottom right, triangle 1
-        -0.5f, -0.5f, 0.0f,  // bottom left, triangle 1
-    };
+    // Creating a shader
+    Shader Tri("../horizontalOffset.vs", "../passColor.fs");
 
     // this triangle has colors as well
-    float verticesTri2[] = {
+    float verticesTri[] = {
         // position          //colors
-        -0.6f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f, // top left, triangle 2
-        -0.6f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f, // bottom left, triangle 2
-         0.4f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f  // top right, triangle 2
+        -0.5f,  0.0f, 0.0f,  1.0f, 0.0f, 0.0f, // top left, triangle 2
+         0.0f,  0.5f, 0.0f,  0.0f, 1.0f, 0.0f, // bottom left, triangle 2
+         0.5f,  0.0f, 0.0f,  0.0f, 0.0f, 1.0f  // top right, triangle 2
     };
 
-    GLuint VBOTri1, VAOTri1;
-    GLuint VBOTri2, VAOTri2;
-
-    glGenVertexArrays(1, &VAOTri1);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
-    glBindVertexArray(VAOTri1);
-
-    glGenBuffers(1, &VBOTri1);
-    glBindBuffer(GL_ARRAY_BUFFER, VBOTri1);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(verticesTri1), verticesTri1, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
+    GLuint VBOTri, VAOTri;
 
     glCheckError();
 
-    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-    // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-    glBindVertexArray(0);
+    glGenVertexArrays(1, &VAOTri);
 
-    glGenVertexArrays(1, &VAOTri2);
+    glBindVertexArray(VAOTri);
 
-    glBindVertexArray(VAOTri2);
+    glGenBuffers(1, &VBOTri);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOTri);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(verticesTri), verticesTri, GL_STATIC_DRAW);
 
-    glGenBuffers(1, &VBOTri2);
-    glBindBuffer(GL_ARRAY_BUFFER, VBOTri2);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(verticesTri2), verticesTri2, GL_STATIC_DRAW);
-
-    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) 0);
     glEnableVertexAttribArray(0);
+    // We need this to point to the second vector of colors
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    glUseProgram(shaderProgramTri2);
 
     glCheckError();
 
@@ -303,13 +170,12 @@ int main(void) {
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+        float offsetVal = (sin(glfwGetTime()));
 
-        glUseProgram(shaderProgramTri1);
+        Tri.setFloat("offset", offsetVal);
 
-        glBindVertexArray(VAOTri1);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        glUseProgram(shaderProgramTri2);
-        glBindVertexArray(VAOTri2);
+        Tri.use();
+        glBindVertexArray(VAOTri);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glBindVertexArray(0);
 
@@ -319,12 +185,8 @@ int main(void) {
     }
 
     // optional: de-allocate all resources once they've outlived their purpose:
-    glDeleteVertexArrays(1, &VAOTri1);
-    glDeleteVertexArrays(1, &VAOTri2);
-    glDeleteBuffers(1, &VBOTri1);
-    glDeleteBuffers(1, &VBOTri2);
-    glDeleteProgram(shaderProgramTri1);
-    glDeleteProgram(shaderProgramTri2);
+    glDeleteVertexArrays(1, &VAOTri);
+    glDeleteBuffers(1, &VBOTri);
 
     // close window, terminate GLFW
     glfwTerminate();
