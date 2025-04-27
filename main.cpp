@@ -7,7 +7,10 @@
 #include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
+#include <ostream>
 #include "Shader.hpp"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 
 /**
@@ -36,21 +39,6 @@ GLenum glCheckError_(const char *file, int line) {
 }
 #define glCheckError() glCheckError_(__FILE__, __LINE__)
 
-
-const char *vertexShaderSourceTri1 = "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "}\0";
-
-// Same for our fragment shader: This **must** be set, and here only colors whatever passes through
-const char *fragmentShaderSourceTri1 = "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = vec4(0.2f, 0.5f, 1.0f, 1.0f);\n"
-    "}\0";
 
 /**
  * @brief  Checks what keys were pressed and decides what to do with them
@@ -122,6 +110,26 @@ int main(void) {
         return -1;
     }
 
+
+    unsigned int texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    // set the texture wrapping/filtering options (on the currently bound texture object)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // load and generate the texture
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load("../container.jpg", &width, &height, &nrChannels, 0);
+    if (data) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    } else {
+        std::cerr << "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
+
     glViewport(0, 0, 800, 600);
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -130,17 +138,25 @@ int main(void) {
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
     // Creating a shader
-    Shader Tri("../horizontalOffset.vs", "../passColor.fs");
+    Shader Tri("../crateBox.vs", "../crateBox.fs");
+
+    glCheckError();
 
     // this triangle has colors as well
     float verticesTri[] = {
-        // position          //colors
-        -0.5f,  0.0f, 0.0f,  1.0f, 0.0f, 0.0f, // top left, triangle 2
-         0.0f,  0.5f, 0.0f,  0.0f, 1.0f, 0.0f, // bottom left, triangle 2
-         0.5f,  0.0f, 0.0f,  0.0f, 0.0f, 1.0f  // top right, triangle 2
+        // position          // colors           // texture coordinates
+         0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  1.0f, 1.0f, // top right
+         0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  1.0f, 0.0f, // bottom right
+        -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  0.0f, 0.0f, // bottom left
+        -0.5f,  0.5f, 0.0f,  1.0f, 1.0f, 0.0f,  0.0f, 1.0f  // top left
     };
 
-    GLuint VBOTri, VAOTri;
+    unsigned int indices[] = {  
+        0, 1, 3, // first triangle
+        1, 2, 3  // second triangle
+    };
+
+    GLuint VBOTri, VAOTri, EBO;
 
     glCheckError();
 
@@ -149,14 +165,23 @@ int main(void) {
     glBindVertexArray(VAOTri);
 
     glGenBuffers(1, &VBOTri);
+
+    glGenBuffers(1, &EBO);
+
     glBindBuffer(GL_ARRAY_BUFFER, VBOTri);
     glBufferData(GL_ARRAY_BUFFER, sizeof(verticesTri), verticesTri, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*) 0);
     glEnableVertexAttribArray(0);
     // We need this to point to the second vector of colors
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+    // This points to our texture coordinates
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 
 
     glCheckError();
@@ -170,16 +195,22 @@ int main(void) {
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        float offsetVal = (sin(glfwGetTime()));
 
-        Tri.setFloat("offset", offsetVal);
-
+        glCheckError();
+        glBindTexture(GL_TEXTURE_2D, texture);
         Tri.use();
+        std::cout << "test" << std::endl;
+        glCheckError();
         glBindVertexArray(VAOTri);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        glBindVertexArray(0);
+        glCheckError();
+        std::cout << "test2" << std::endl;
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        std::cout << "test3" << std::endl;
+        glCheckError();
 
+        std::cout << "test4" << std::endl;
         glfwSwapBuffers(window);
+        glCheckError();
         glfwPollEvents();
         glCheckError();
     }
@@ -187,6 +218,7 @@ int main(void) {
     // optional: de-allocate all resources once they've outlived their purpose:
     glDeleteVertexArrays(1, &VAOTri);
     glDeleteBuffers(1, &VBOTri);
+    glDeleteBuffers(1, &EBO);
 
     // close window, terminate GLFW
     glfwTerminate();
