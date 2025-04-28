@@ -12,6 +12,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+float mixVal = 0.2f;
 
 /**
  * @brief This helper function prints only if there is an error; this is useful since by default, openGL only gives error codes
@@ -53,7 +54,12 @@ void processInput(GLFWwindow *window) {
     static bool spacePressedLastFrame = false;
     static bool isWireframe = false;
 
+    static bool upKeyLastFrame = false;
+    static bool downKeyLastFrame = false;
+
     bool spacePressedThisFrame = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
+    bool upKeyThisFrame = glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS;
+    bool downKeyThisFrame = glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS;
 
     if(spacePressedThisFrame && !spacePressedLastFrame) { // This is for debugging, being able to swap to and from wireframe mode
 
@@ -65,7 +71,17 @@ void processInput(GLFWwindow *window) {
         isWireframe = !isWireframe;
     }
 
+    if (upKeyThisFrame && !upKeyLastFrame && mixVal <= 1.0f) {
+        mixVal += 0.1;
+    }
+
+    if (downKeyThisFrame && !downKeyLastFrame && mixVal >= -1.0f) {
+        mixVal -= 0.1;
+    }
+
     spacePressedLastFrame = spacePressedThisFrame;
+    upKeyLastFrame = upKeyThisFrame;
+    downKeyLastFrame = downKeyThisFrame;
 }
 
 /**
@@ -135,6 +151,8 @@ int main(void) {
 
     glGenTextures(1, &texture2);
     glBindTexture(GL_TEXTURE_2D, texture2);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
 
     // This is because openGL expects 0.0 to be on the bottom of the img, but it is usually on top.
     stbi_set_flip_vertically_on_load(true);
@@ -208,6 +226,7 @@ int main(void) {
     Tri.use();
     glUniform1i(glGetUniformLocation(Tri.ID, "texture2"), 0);
     Tri.setInt("texture1", 1);
+    Tri.setFloat("mixVal", 0.2f);
 
     // uncomment this call to draw in wireframe polygons.
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -227,6 +246,8 @@ int main(void) {
         glCheckError();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glCheckError();
+
+        Tri.setFloat("mixVal", mixVal);
 
         glfwSwapBuffers(window);
         glCheckError();
