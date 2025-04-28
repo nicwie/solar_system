@@ -111,7 +111,7 @@ int main(void) {
     }
 
 
-    unsigned int texture;
+    GLuint texture, texture2;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
     // set the texture wrapping/filtering options (on the currently bound texture object)
@@ -129,6 +129,25 @@ int main(void) {
         std::cerr << "Failed to load texture" << std::endl;
     }
     stbi_image_free(data);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glGenTextures(1, &texture2);
+    glBindTexture(GL_TEXTURE_2D, texture2);
+
+    // This is because openGL expects 0.0 to be on the bottom of the img, but it is usually on top.
+    stbi_set_flip_vertically_on_load(true);
+
+    data = stbi_load("../awesomeface.png", &width, &height, &nrChannels, 0);
+    if (data) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    stbi_image_free(data);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, texture2);
 
     glViewport(0, 0, 800, 600);
 
@@ -151,7 +170,7 @@ int main(void) {
         -0.5f,  0.5f, 0.0f,  1.0f, 1.0f, 0.0f,  0.0f, 1.0f  // top left
     };
 
-    unsigned int indices[] = {  
+    unsigned int indices[] = {
         0, 1, 3, // first triangle
         1, 2, 3  // second triangle
     };
@@ -186,6 +205,10 @@ int main(void) {
 
     glCheckError();
 
+    Tri.use();
+    glUniform1i(glGetUniformLocation(Tri.ID, "texture2"), 0);
+    Tri.setInt("texture1", 1);
+
     // uncomment this call to draw in wireframe polygons.
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -199,16 +222,12 @@ int main(void) {
         glCheckError();
         glBindTexture(GL_TEXTURE_2D, texture);
         Tri.use();
-        std::cout << "test" << std::endl;
         glCheckError();
         glBindVertexArray(VAOTri);
         glCheckError();
-        std::cout << "test2" << std::endl;
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        std::cout << "test3" << std::endl;
         glCheckError();
 
-        std::cout << "test4" << std::endl;
         glfwSwapBuffers(window);
         glCheckError();
         glfwPollEvents();
