@@ -1,4 +1,8 @@
 
+#include <cmath>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/vector_float3.hpp>
+#include <glm/trigonometric.hpp>
 #include <iostream>
 
 #include <GL/glew.h>
@@ -8,6 +12,10 @@
 
 #include <glm/glm.hpp>
 #include <ostream>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "Shader.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -15,7 +23,7 @@
 float mixVal = 0.2f;
 
 /**
- * @brief This helper function prints only if there is an error; this is useful since by default, openGL only gives error codes
+ * @brief This helper function prints only if there is an error; it is useful since by default, openGL only gives error codes
  *
  * @param[in] file The file in which the error occured, this is given by the preprocessor directive
  * @param[in] line the line in which the error occured, also given by preprocessor directive
@@ -131,10 +139,11 @@ int main(void) {
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
     // set the texture wrapping/filtering options (on the currently bound texture object)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // note that we set the container wrapping method to GL_CLAMP_TO_EDGE
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    // set texture filtering parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // set texture filtering to nearest neighbor to clearly see the texels/pixels
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     // load and generate the texture
     int width, height, nrChannels;
     unsigned char *data = stbi_load("../container.jpg", &width, &height, &nrChannels, 0);
@@ -152,7 +161,6 @@ int main(void) {
     glGenTextures(1, &texture2);
     glBindTexture(GL_TEXTURE_2D, texture2);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
 
     // This is because openGL expects 0.0 to be on the bottom of the img, but it is usually on top.
     stbi_set_flip_vertically_on_load(true);
@@ -167,6 +175,11 @@ int main(void) {
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texture2);
 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // set texture filtering to nearest neighbor to clearly see the texels/pixels
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
     glViewport(0, 0, 800, 600);
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -175,7 +188,7 @@ int main(void) {
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
     // Creating a shader
-    Shader Tri("../crateBox.vs", "../crateBox.fs");
+    Shader Tri("../rotationShader.vs", "../crateBox.fs");
 
     glCheckError();
 
@@ -228,6 +241,9 @@ int main(void) {
     Tri.setInt("texture1", 1);
     Tri.setFloat("mixVal", 0.2f);
 
+
+    GLuint transformLoc = glGetUniformLocation(Tri.ID, "transform");
+
     // uncomment this call to draw in wireframe polygons.
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -235,6 +251,11 @@ int main(void) {
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
 
+        // This is now translation and rotation using matrix multiplication
+        glm::mat4 trans = glm::mat4(1.0f);
+        trans = glm::translate(trans, glm::vec3(0.5f, -0.5, 0.0f));
+        trans = glm::rotate(trans, (float) glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -243,7 +264,19 @@ int main(void) {
         Tri.use();
         glCheckError();
         glBindVertexArray(VAOTri);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glCheckError();
+        trans = glm::mat4(1.0f);
+        trans = glm::translate(trans, glm::vec3(0.5f, 0.5, 0.0f));
+        trans = glm::scale(trans, glm::vec3(sin(glfwGetTime()), sin(glfwGetTime()), 1.0f));
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glCheckError();
+
+        trans = glm::mat4(1.0f);
+        trans = glm::translate(trans, glm::vec3(-0.5f, -0.5, 0.0f));
+        trans = glm::scale(trans, glm::vec3(cos(glfwGetTime()), cos(glfwGetTime()), 1.0f));
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glCheckError();
 
