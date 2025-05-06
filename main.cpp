@@ -1,5 +1,6 @@
 
 #include <cmath>
+#include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/vector_float3.hpp>
 #include <glm/trigonometric.hpp>
@@ -72,9 +73,9 @@ void processInput(GLFWwindow *window) {
     if(spacePressedThisFrame && !spacePressedLastFrame) { // This is for debugging, being able to swap to and from wireframe mode
 
         if (isWireframe)
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        else
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        else
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
         isWireframe = !isWireframe;
     }
@@ -134,6 +135,9 @@ int main(void) {
         return -1;
     }
 
+    // This is done so that textures are rendered according to their z distance from us
+    glEnable(GL_DEPTH_TEST);
+
 
     GLuint texture, texture2;
     glGenTextures(1, &texture);
@@ -188,25 +192,59 @@ int main(void) {
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
     // Creating a shader
-    Shader Tri("../rotationShader.vs", "../crateBox.fs");
+    Shader Tri("../modelviewprojection.vs", "../crateBox.fs");
 
     glCheckError();
 
     // this triangle has colors as well
     float verticesTri[] = {
         // position          // colors           // texture coordinates
-         0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  1.0f, 1.0f, // top right
-         0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  1.0f, 0.0f, // bottom right
-        -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  0.0f, 0.0f, // bottom left
-        -0.5f,  0.5f, 0.0f,  1.0f, 1.0f, 0.0f,  0.0f, 1.0f  // top left
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+
     };
 
-    unsigned int indices[] = {
-        0, 1, 3, // first triangle
-        1, 2, 3  // second triangle
-    };
 
-    GLuint VBOTri, VAOTri, EBO;
+    GLuint VBOTri, VAOTri;
 
     glCheckError();
 
@@ -216,22 +254,15 @@ int main(void) {
 
     glGenBuffers(1, &VBOTri);
 
-    glGenBuffers(1, &EBO);
-
     glBindBuffer(GL_ARRAY_BUFFER, VBOTri);
     glBufferData(GL_ARRAY_BUFFER, sizeof(verticesTri), verticesTri, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*) 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*) 0);
     glEnableVertexAttribArray(0);
-    // We need this to point to the second vector of colors
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
     // This points to our texture coordinates
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
 
     glCheckError();
@@ -241,9 +272,6 @@ int main(void) {
     Tri.setInt("texture1", 1);
     Tri.setFloat("mixVal", 0.2f);
 
-
-    GLuint transformLoc = glGetUniformLocation(Tri.ID, "transform");
-
     // uncomment this call to draw in wireframe polygons.
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -251,33 +279,34 @@ int main(void) {
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
 
-        // This is now translation and rotation using matrix multiplication
-        glm::mat4 trans = glm::mat4(1.0f);
-        trans = glm::translate(trans, glm::vec3(0.5f, -0.5, 0.0f));
-        trans = glm::rotate(trans, (float) glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+        // Here we define our matrices for model, view, and projection
+
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+
+        glm::mat4 view = glm::mat4(1.0f);
+        // Note that we translate by -z -> away from us
+        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+        glm::mat4 projection;
+        projection = glm::perspective(glm::radians(45.0f), 800.0f/600.0f, 0.1f, 100.0f);
+
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glCheckError();
         glBindTexture(GL_TEXTURE_2D, texture);
         Tri.use();
         glCheckError();
         glBindVertexArray(VAOTri);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glCheckError();
-        trans = glm::mat4(1.0f);
-        trans = glm::translate(trans, glm::vec3(0.5f, 0.5, 0.0f));
-        trans = glm::scale(trans, glm::vec3(sin(glfwGetTime()), sin(glfwGetTime()), 1.0f));
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        glCheckError();
-
-        trans = glm::mat4(1.0f);
-        trans = glm::translate(trans, glm::vec3(-0.5f, -0.5, 0.0f));
-        trans = glm::scale(trans, glm::vec3(cos(glfwGetTime()), cos(glfwGetTime()), 1.0f));
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        GLint modelLoc = glGetUniformLocation(Tri.ID, "model");
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        GLint viewLoc = glGetUniformLocation(Tri.ID, "view");
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        GLint projLoc = glGetUniformLocation(Tri.ID, "projection");
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+        glDrawArrays(GL_TRIANGLES, 0, 36);
         glCheckError();
 
         Tri.setFloat("mixVal", mixVal);
@@ -291,7 +320,6 @@ int main(void) {
     // optional: de-allocate all resources once they've outlived their purpose:
     glDeleteVertexArrays(1, &VAOTri);
     glDeleteBuffers(1, &VBOTri);
-    glDeleteBuffers(1, &EBO);
 
     // close window, terminate GLFW
     glfwTerminate();
