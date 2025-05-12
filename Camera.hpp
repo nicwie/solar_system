@@ -19,6 +19,10 @@ const float SPEED = 2.5f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 45.0f;
 
+/**
+ * @brief This class helps us not have to define all matrices every time we want to have a camera and allows basic control
+ * it is also almost wholly taken from https://learnopengl.com/Getting-started/Camera
+ */
 class Camera {
 public:
     // Camera attributes
