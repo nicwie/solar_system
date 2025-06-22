@@ -206,7 +206,8 @@ int main(void) {
 
     // From here: setting up objects
 
-    Shader shader("../model_loading.vs", "../model_loading.fs");
+    Shader planetShader("../lighting_planet.vs", "../lighting_planet.fs");
+    Shader sunShader("../lighting_planet.vs", "../lighting_sun.fs");
     glCheckError();
 
     Planet sun("../Sun_1_1391000.glb", 10.0f, 0.0f, 0.0f, 2.0f);
@@ -233,16 +234,27 @@ int main(void) {
         glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        shader.use();
+        sunShader.use();
 
-        // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
         glm::mat4 view = camera.GetViewMatrix();
-        shader.setMat4("projection", projection);
-        shader.setMat4("view", view);
+        sunShader.setMat4("projection", projection);
+        sunShader.setMat4("view", view);
+        
+        sun.Draw(sunShader);
 
-        earth.Draw(shader);
-        sun.Draw(shader);
+        planetShader.use();
+        
+        glm::mat4 sunModelMatrix = sun.getModelMatrix();
+
+        glm::vec3 sunPos = glm::vec3(sunModelMatrix * glm::vec4(0.0, 0.0, 0.0, 1.0));
+        
+        // view/projection transformations
+        planetShader.setMat4("projection", projection);
+        planetShader.setMat4("view", view);
+        planetShader.setVec3("lightPos", sunPos);
+
+        earth.Draw(planetShader);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------

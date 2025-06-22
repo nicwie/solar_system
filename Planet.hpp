@@ -21,7 +21,7 @@ public:
       pOrbitalSpeed(orbitalSpeed),
       pAxialSpeed(axialSpeed) {}
 
-    void Draw(Shader& shader) {
+    glm::mat4 getModelMatrix() {
         glm::mat4 modelMatrix = glm::mat4(1.0f);
 
         modelMatrix = glm::rotate(modelMatrix,
@@ -36,6 +36,11 @@ public:
 
         modelMatrix = glm::scale(modelMatrix, glm::vec3(pScale));
 
+        return modelMatrix;
+    }
+
+    void Draw(Shader& shader) {
+        glm::mat4 modelMatrix = getModelMatrix();
         shader.setMat4("model", modelMatrix);
         this->model.Draw(shader);
     }
