@@ -5,46 +5,30 @@ project(solar_system)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find OpenGL
+# --- FIND PACKAGES ---
 find_package(OpenGL REQUIRED)
-
-# Find GLFW3
 find_package(glfw3 REQUIRED)
-if(NOT glfw3_FOUND)
-  message(
-    FATAL_ERROR
-      "GLFW3 not found. Please install it or set GLFW_DIR CMake variable.")
-endif()
-
-# Find GLEW
 find_package(GLEW REQUIRED)
-if(NOT GLEW_FOUND)
-  message(
-    FATAL_ERROR
-      "GLEW not found. Please install it or set GLEW_DIR CMake variable.")
-endif()
+find_package(Assimp REQUIRED)
 
-# Add executable
-add_executable(solar_system main.cpp) # Replace main.cpp with your source
-# files
+# --- CREATE EXECUTABLE TARGET ---
+add_executable(solar_system main.cpp)
 
-# Link libraries
-target_link_libraries(solar_system OpenGL::GL glfw GLEW::GLEW)
+# --- INCLUDE DIRECTORIES ---
+# Add the include directories from Assimp and other libraries
+target_include_directories(
+  solar_system PRIVATE ${GLEW_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS}
+                       ${ASSIMP_INCLUDE_DIRS})
 
-# Optional: Set up include directories if find_package doesn't do it
-# automatically
-target_include_directories(solar_system PRIVATE ${GLFW_INCLUDE_DIRS}
-                                                ${GLEW_INCLUDE_DIRS})
+# --- LINK LIBRARIES TO TARGET ---
+# Link all required libraries to your executable
+target_link_libraries(solar_system PRIVATE OpenGL::GL glfw GLEW::GLEW
+                                           ${ASSIMP_LIBRARIES})
 
-# Optional: Copy necessary assets (shaders, textures, etc.) to the build
-# directory configure_file(path/to/your/asset.txt ${CMAKE_BINARY_DIR}/asset.txt
-# COPYONLY) target_include_directories(YourOpenGLProgram PRIVATE
-# ${CMAKE_BINARY_DIR})
-
-# add target that runs the program after it is built
+# --- OPTIONAL: CUSTOM TARGET TO RUN THE PROGRAM ---
 add_custom_target(
   run_solar_system
   COMMAND $<TARGET_FILE:solar_system>
   DEPENDS solar_system
-  WORKING_DIRECTORY ${CMAKE_BINARY_DIR} # Optional: Set working directory
+  WORKING_DIRECTORY ${CMAKE_PROJECT_DIR}
   COMMENT "Running solar_system...")
