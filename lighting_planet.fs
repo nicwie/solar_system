@@ -36,8 +36,11 @@ void main()
     rim = pow(rim, rimPower);
     vec3 rimColor = vec3(0.5, 0.7, 0.8) * rim;
 
+    // "Darkness" to not light front with rimlighting
+    float darkness = 1.0 - diff;
+
     vec3 objectColor = texture(texture_diffuse1, TexCoords).rgb;
 
-    vec3 result = (ambient + diffuse) * objectColor + specular + (0.8 * rimColor);
+    vec3 result = (ambient + diffuse) * objectColor + specular + (0.75 * rimColor * darkness);
     FragColor = vec4(result, 1.0);
 }
