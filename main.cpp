@@ -20,8 +20,9 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Camera.hpp"
-#include "Model.hpp"
 #include "Shader.hpp"
+#include "Planet.hpp"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -40,8 +41,6 @@ bool firstMouse = true;
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
-
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
 /**
  * @brief This helper function prints only if there is an error; it is useful since by default, openGL only gives error codes
@@ -210,7 +209,10 @@ int main(void) {
     Shader shader("../model_loading.vs", "../model_loading.fs");
     glCheckError();
 
-    Model model("../Earth_1_12756.glb");
+    Planet sun("../Sun_1_1391000.glb", 10.0f, 0.0f, 0.0f, 2.0f);
+
+    Planet earth("../Earth_1_12756.glb", 0.01f, 50.0f, 10.0f, 10.0f);
+
 
     glCheckError();
 
@@ -239,13 +241,8 @@ int main(void) {
         shader.setMat4("projection", projection);
         shader.setMat4("view", view);
 
-        // render model
-        glm::mat4 loadedModel = glm::mat4(1.0f);
-        loadedModel = glm::translate(loadedModel, glm::vec3(0.0f, 0.0f, 0.0f));
-        loadedModel = glm::scale(loadedModel, glm::vec3(0.01f, 0.01f, 0.01f)); // scale down
-        shader.setMat4("model", loadedModel);
-        model.Draw(shader);
-
+        earth.Draw(shader);
+        sun.Draw(shader);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
