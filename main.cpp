@@ -22,6 +22,7 @@
 #include "Camera.hpp"
 #include "Shader.hpp"
 #include "Planet.hpp"
+#include "Skybox.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -217,6 +218,17 @@ int main(void) {
 
     glCheckError();
 
+    Shader skyboxShader("../skybox.vs", "../skybox.fs");
+
+    glCheckError();
+
+    Skybox skybox("../8k_stars.jpg");
+
+    skyboxShader.use();
+    skyboxShader.setInt("equirectangularMap", 0);
+
+    glCheckError();
+
     // main drawing loop
     while (!glfwWindowShouldClose(window)) {
         // per-frame time logic
@@ -234,21 +246,33 @@ int main(void) {
         glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        sunShader.use();
+
+
 
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
         glm::mat4 view = camera.GetViewMatrix();
+
+        // Skybox
+        skyboxShader.use();
+        skybox.Draw(skyboxShader, view, projection);
+
+        // Draw Sun
+        sunShader.use();
+
+        // view/projection transformations
         sunShader.setMat4("projection", projection);
         sunShader.setMat4("view", view);
-        
+
         sun.Draw(sunShader);
 
-        planetShader.use();
-        
+
         glm::mat4 sunModelMatrix = sun.getModelMatrix();
 
         glm::vec3 sunPos = glm::vec3(sunModelMatrix * glm::vec4(0.0, 0.0, 0.0, 1.0));
-        
+
+        // Draw Earth
+        planetShader.use();
+
         // view/projection transformations
         planetShader.setMat4("projection", projection);
         planetShader.setMat4("view", view);
