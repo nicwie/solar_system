@@ -3,4 +3,4 @@
 To build, first `mkdir build`, `cd` into `build` and enter `cmake ..`.
 After that, enter `make` and then you should see an executable.
 
-This requires glew, opengl 3.3, cmake, asssimp, and glfw.
+This requires glew, opengl 3.3, cmake, assimp, and glfw.
