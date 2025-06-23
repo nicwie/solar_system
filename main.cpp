@@ -1,4 +1,3 @@
-#include <cmath>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_float4x4.hpp>
 #include <glm/ext/matrix_transform.hpp>
@@ -222,7 +221,7 @@ int main(void) {
 
     glCheckError();
 
-    Skybox skybox("../8k_stars.jpg");
+    Skybox skybox("../8k_stars_milky_way.jpg");
 
     skyboxShader.use();
     skyboxShader.setInt("equirectangularMap", 0);
