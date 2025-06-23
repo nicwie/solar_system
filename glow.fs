@@ -6,5 +6,5 @@ in vec2 TexCoords;
 uniform sampler2D glowTexture;
 
 void main() {
-    FragColor = texture(glowTexture, TexCoords);
+    FragColor = 0.5 * texture(glowTexture, TexCoords);
 }

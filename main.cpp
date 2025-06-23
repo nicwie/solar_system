@@ -30,8 +30,8 @@
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-// camera
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+// camera, with a starting position looking down
+Camera camera(glm::vec3(0.0f, 60.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, -89.0f);
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -292,15 +292,19 @@ int main(void) {
         // Render Earth Glow
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDepthMask(GL_FALSE);
 
-        glm::mat4 glowModelMatrix = earth.getModelMatrix();
+        glowShader.use();
 
-        // remove axial rotation
-        glowModelMatrix = glm::mat4(1.0f);
-        glowModelMatrix = glm::rotate(glowModelMatrix, glm::radians((float)glfwGetTime() * 10.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // Use earth's orbital speed
-        glowModelMatrix = glm::translate(glowModelMatrix, glm::vec3(50.0f, 0.0f, 0.0f)); // Use earth's orbital radius
-        // Make the glow billboard slightly larger than the planet itself
-        glowModelMatrix = glm::scale(glowModelMatrix, glm::vec3(0.015f));
+        glm::mat4 earthModelMatrix = earth.getModelMatrix();
+        glm::vec3 earthPos = glm::vec3(earthModelMatrix * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+
+        glm::mat4 glowModelMatrix = glm::translate(glm::mat4(1.0f), earthPos);
+
+        glowModelMatrix = glowModelMatrix * glm::transpose(glm::mat4(glm::mat3(view)));
+
+        glowModelMatrix = glm::scale(glowModelMatrix, glm::vec3(8.0f));
+
         glowShader.setMat4("model", glowModelMatrix);
 
         // Bind the glow texture and draw the quad
@@ -309,9 +313,11 @@ int main(void) {
         glBindVertexArray(quadVAO);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-        glowShader.use();
         glowShader.setMat4("projection", projection);
         glowShader.setMat4("view", view);
+
+        glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
 
         // Draw Sun
         sunShader.use();
