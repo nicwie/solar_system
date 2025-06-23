@@ -26,8 +26,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-float mixVal = 0.2f;
-
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -90,12 +88,7 @@ void processInput(GLFWwindow *window) {
     static bool spacePressedLastFrame = false;
     static bool isWireframe = false;
 
-    static bool upKeyLastFrame = false;
-    static bool downKeyLastFrame = false;
-
     bool spacePressedThisFrame = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
-    bool upKeyThisFrame = glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS;
-    bool downKeyThisFrame = glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS;
 
     if(spacePressedThisFrame && !spacePressedLastFrame) { // This is for debugging, being able to swap to and from wireframe mode
 
@@ -107,17 +100,7 @@ void processInput(GLFWwindow *window) {
         isWireframe = !isWireframe;
     }
 
-    if (upKeyThisFrame && !upKeyLastFrame && mixVal <= 1.0f) {
-        mixVal += 0.1;
-    }
-
-    if (downKeyThisFrame && !downKeyLastFrame && mixVal >= -1.0f) {
-        mixVal -= 0.1;
-    }
-
     spacePressedLastFrame = spacePressedThisFrame;
-    upKeyLastFrame = upKeyThisFrame;
-    downKeyLastFrame = downKeyThisFrame;
 }
 
 void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
@@ -228,6 +211,52 @@ int main(void) {
 
     glCheckError();
 
+    // This shader creates a "glow" from the earth's atmosphere
+    Shader glowShader("../glow.vs", "../glow.fs");
+
+    unsigned int glowTexture;
+
+    glGenTextures(1, &glowTexture);
+    glBindTexture(GL_TEXTURE_2D, glowTexture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load("../glow.png", &width, &height, &nrChannels, 0);
+
+    if (data) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        stbi_image_free(data);
+    } else {
+        std::cerr << "Failed to load glow texture" << std::endl;
+        stbi_image_free(data);
+    }
+    glowShader.use();
+    glowShader.setInt("glowTexture", 0);
+
+    // VAO for billboard glow quad
+    float quadVertices[] = {
+        // positions        // texture Coords
+        -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+        -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+         1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+         1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+    };
+
+    unsigned int quadVAO, quadVBO;
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+
     // main drawing loop
     while (!glfwWindowShouldClose(window)) {
         // per-frame time logic
@@ -245,15 +274,36 @@ int main(void) {
         glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-
-
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
         glm::mat4 view = camera.GetViewMatrix();
 
         // Skybox
         skyboxShader.use();
         skybox.Draw(skyboxShader, view, projection);
+
+        // Render Earth Glow
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        glm::mat4 glowModelMatrix = earth.getModelMatrix();
+
+        // remove axial rotation
+        glowModelMatrix = glm::mat4(1.0f);
+        glowModelMatrix = glm::rotate(glowModelMatrix, glm::radians((float)glfwGetTime() * 10.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // Use earth's orbital speed
+        glowModelMatrix = glm::translate(glowModelMatrix, glm::vec3(50.0f, 0.0f, 0.0f)); // Use earth's orbital radius
+        // Make the glow billboard slightly larger than the planet itself
+        glowModelMatrix = glm::scale(glowModelMatrix, glm::vec3(0.015f)); 
+        glowShader.setMat4("model", glowModelMatrix);
+        
+        // Bind the glow texture and draw the quad
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, glowTexture);
+        glBindVertexArray(quadVAO);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+        glowShader.use();
+        glowShader.setMat4("projection", projection);
+        glowShader.setMat4("view", view);
 
         // Draw Sun
         sunShader.use();
