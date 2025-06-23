@@ -190,32 +190,32 @@ int main(void) {
     // From here: setting up objects
 
     // Earth atmosphere has some unique properties so we try to make it look cool
-    Shader earthShader("../lighting_earth.vs", "../lighting_earth.fs");
-    Shader planetShader("../lighting_planet.vs", "../lighting_planet.fs");
-    Shader sunShader("../lighting_planet.vs", "../lighting_sun.fs");
+    Shader earthShader("../shaders/lighting_earth.vs", "../shaders/lighting_earth.fs");
+    Shader planetShader("../shaders/lighting_planet.vs", "../shaders/lighting_planet.fs");
+    Shader sunShader("../shaders/lighting_planet.vs", "../shaders/lighting_sun.fs");
+    Shader skyboxShader("../shaders/skybox.vs", "../shaders/skybox.fs");
     glCheckError();
 
 float AU = 120.0f; // Astronomical Unit, used to scale the solar system
 
-    Planet sun("../Sun_1_1391000.glb", 50.0f, 0.0f, 0.0f, 1.0f);
-    Planet mercury("../Mercury_1_4878.glb", 0.0038f, AU * 0.39f, 42.0f, 10.0f);
-    Planet venus("../Venus_1_12103.glb", 0.0095f, AU * 0.72f, 16.0f, 10.0f);
-    Planet earth("../Earth_1_12756.glb", 0.01f, AU * 1.00f, 10.0f, 10.0f);
-    Planet mars("../24881_Mars_1_6792.glb", 0.0053f, AU * 1.52f, 5.0f, 10.0f);
-    Planet jupiter("../Jupiter_1_142984.glb", 0.112f, AU * 5.20f, 1.0f, 10.0f);
-    Planet saturn("../Saturn_1_120536.glb", 0.093f, AU * 9.58f, 0.6f, 10.0f);
-    Planet uranus("../Uranus_1_51118.glb", 0.04f, AU * 19.2f, 0.2f, 10.0f);
-    Planet neptune("../Neptune_1_49528.glb", 0.038f, AU * 30.1f, 0.1f, 10.0f);
+    Planet sun("../models/Sun_1_1391000.glb", 50.0f, 0.0f, 0.0f, 1.0f);
+    Planet mercury("../models/Mercury_1_4878.glb", 0.0038f, AU * 0.39f, 42.0f, 10.0f);
+    Planet venus("../models/Venus_1_12103.glb", 0.0095f, AU * 0.72f, 16.0f, 10.0f);
+    Planet earth("../models/Earth_1_12756.glb", 0.01f, AU * 1.00f, 10.0f, 10.0f);
+    Planet mars("../models/24881_Mars_1_6792.glb", 0.0053f, AU * 1.52f, 5.0f, 10.0f);
+    Planet jupiter("../models/Jupiter_1_142984.glb", 0.112f, AU * 5.20f, 1.0f, 10.0f);
+    Planet saturn("../models/Saturn_1_120536.glb", 0.093f, AU * 9.58f, 0.6f, 10.0f);
+    Planet uranus("../models/Uranus_1_51118.glb", 0.04f, AU * 19.2f, 0.2f, 10.0f);
+    Planet neptune("../models/Neptune_1_49528.glb", 0.038f, AU * 30.1f, 0.1f, 10.0f);
 
 
 
     glCheckError();
 
-    Shader skyboxShader("../skybox.vs", "../skybox.fs");
 
     glCheckError();
 
-    Skybox skybox("../8k_stars_milky_way.jpg");
+    Skybox skybox("../images/8k_stars_milky_way.jpg");
 
     skyboxShader.use();
     skyboxShader.setInt("equirectangularMap", 0);
@@ -223,7 +223,7 @@ float AU = 120.0f; // Astronomical Unit, used to scale the solar system
     glCheckError();
 
     // This shader creates a "glow" from the earth's atmosphere
-    Shader glowShader("../glow.vs", "../glow.fs");
+    Shader glowShader("../shaders/glow.vs", "../shaders/glow.fs");
 
     unsigned int glowTexture;
 
@@ -236,7 +236,7 @@ float AU = 120.0f; // Astronomical Unit, used to scale the solar system
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     int width, height, nrChannels;
-    unsigned char *data = stbi_load("../glow.png", &width, &height, &nrChannels, 0);
+    unsigned char *data = stbi_load("../images/glow.png", &width, &height, &nrChannels, 0);
 
     if (data) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
