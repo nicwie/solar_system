@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(solar_system)
 
+cmake_policy(SET CMP0072 NEW)
+
 # Set the C++ standard
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -15,13 +17,11 @@ find_package(Assimp REQUIRED)
 add_executable(solar_system main.cpp)
 
 # --- INCLUDE DIRECTORIES ---
-# Add the include directories from Assimp and other libraries
 target_include_directories(
   solar_system PRIVATE ${GLEW_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS}
                        ${ASSIMP_INCLUDE_DIRS})
 
 # --- LINK LIBRARIES TO TARGET ---
-# Link all required libraries to your executable
 target_link_libraries(solar_system PRIVATE OpenGL::GL glfw GLEW::GLEW
                                            ${ASSIMP_LIBRARIES})
 
