@@ -194,9 +194,15 @@ int main(void) {
     glCheckError();
 
     Planet sun("../Sun_1_1391000.glb", 10.0f, 0.0f, 0.0f, 2.0f);
-
     Planet earth("../Earth_1_12756.glb", 0.01f, 50.0f, 10.0f, 10.0f);
-
+    //Planet moon("../Moon_1_3474.glb", 0.002f, 0.0f, 0.0f, 2.0f);
+    Planet mars("../24881_Mars_1_6792.glb", 0.005f, 100.0f, 20.0f, 10.0f);
+    Planet venus("../Venus_1_12103.glb", 0.008f, 30.0f, 5.0f, 10.0f);
+    Planet jupiter("../Jupiter_1_142984.glb", 0.05f, 200.0f, 30.0f, 10.0f);
+    Planet saturn("../Saturn_1_120536.glb", 0.04f, 150.0f, 25.0f, 10.0f);
+    Planet uranus("../Uranus_1_51118.glb", 0.02f, 250.0f, 40.0f, 10.0f);
+    Planet neptune("../Neptune_1_49528.glb", 0.02f, 300.0f, 50.0f, 10.0f);
+    Planet merkur("../Mercury_1_4878.glb", 0.003f, 20.0f, 2.0f, 10.0f);
 
     glCheckError();
 
@@ -319,7 +325,7 @@ int main(void) {
 
         glm::vec3 sunPos = glm::vec3(sunModelMatrix * glm::vec4(0.0, 0.0, 0.0, 1.0));
 
-        // Draw Earth
+        // Earth
         planetShader.use();
 
         // view/projection transformations
@@ -327,7 +333,77 @@ int main(void) {
         planetShader.setMat4("view", view);
         planetShader.setVec3("lightPos", sunPos);
 
-        earth.Draw(planetShader);
+        earth.Draw(planetShader);      
+
+        // Mars
+        planetShader.use();
+
+        // view/projection transformations
+        planetShader.setMat4("projection", projection);
+        planetShader.setMat4("view", view);
+        planetShader.setVec3("lightPos", sunPos);
+
+        mars.Draw(planetShader);      
+
+        // Venus
+        planetShader.use();
+
+        // view/projection transformations
+        planetShader.setMat4("projection", projection);
+        planetShader.setMat4("view", view);
+        planetShader.setVec3("lightPos", sunPos);
+
+        venus.Draw(planetShader); 
+        
+        // Merkur
+        planetShader.use();
+
+        // view/projection transformations
+        planetShader.setMat4("projection", projection);
+        planetShader.setMat4("view", view);
+        planetShader.setVec3("lightPos", sunPos);
+
+        merkur.Draw(planetShader);      
+
+        // Jupiter
+        planetShader.use();
+
+        // view/projection transformations
+        planetShader.setMat4("projection", projection);
+        planetShader.setMat4("view", view);
+        planetShader.setVec3("lightPos", sunPos);
+
+        jupiter.Draw(planetShader);   
+
+        // Saturn
+        planetShader.use();
+
+        // view/projection transformations
+        planetShader.setMat4("projection", projection);
+        planetShader.setMat4("view", view);
+        planetShader.setVec3("lightPos", sunPos);
+
+        saturn.Draw(planetShader);   
+
+        // Uranus
+        planetShader.use();
+
+        // view/projection transformations
+        planetShader.setMat4("projection", projection);
+        planetShader.setMat4("view", view);
+        planetShader.setVec3("lightPos", sunPos);
+
+        uranus.Draw(planetShader);   
+
+        // Neptune
+        planetShader.use();
+
+        // view/projection transformations
+        planetShader.setMat4("projection", projection);
+        planetShader.setMat4("view", view);
+        planetShader.setVec3("lightPos", sunPos);
+
+        neptune.Draw(planetShader);   
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
