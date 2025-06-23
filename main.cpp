@@ -195,16 +195,19 @@ int main(void) {
     Shader sunShader("../lighting_planet.vs", "../lighting_sun.fs");
     glCheckError();
 
-    Planet sun("../Sun_1_1391000.glb", 10.0f, 0.0f, 0.0f, 2.0f);
-    Planet earth("../Earth_1_12756.glb", 0.01f, 50.0f, 10.0f, 10.0f);
-    //Planet moon("../Moon_1_3474.glb", 0.002f, 0.0f, 0.0f, 2.0f);
-    Planet mars("../24881_Mars_1_6792.glb", 0.005f, 100.0f, 20.0f, 10.0f);
-    Planet venus("../Venus_1_12103.glb", 0.008f, 30.0f, 5.0f, 10.0f);
-    Planet jupiter("../Jupiter_1_142984.glb", 0.05f, 200.0f, 30.0f, 10.0f);
-    Planet saturn("../Saturn_1_120536.glb", 0.04f, 150.0f, 25.0f, 10.0f);
-    Planet uranus("../Uranus_1_51118.glb", 0.02f, 250.0f, 40.0f, 10.0f);
-    Planet neptune("../Neptune_1_49528.glb", 0.02f, 300.0f, 50.0f, 10.0f);
-    Planet merkur("../Mercury_1_4878.glb", 0.003f, 20.0f, 2.0f, 10.0f);
+float AU = 120.0f; // Astronomical Unit, used to scale the solar system
+
+    Planet sun("../Sun_1_1391000.glb", 50.0f, 0.0f, 0.0f, 1.0f);
+    Planet mercury("../Mercury_1_4878.glb", 0.0038f, AU * 0.39f, 42.0f, 10.0f);
+    Planet venus("../Venus_1_12103.glb", 0.0095f, AU * 0.72f, 16.0f, 10.0f);
+    Planet earth("../Earth_1_12756.glb", 0.01f, AU * 1.00f, 10.0f, 10.0f);
+    Planet mars("../24881_Mars_1_6792.glb", 0.0053f, AU * 1.52f, 5.0f, 10.0f);
+    Planet jupiter("../Jupiter_1_142984.glb", 0.112f, AU * 5.20f, 1.0f, 10.0f);
+    Planet saturn("../Saturn_1_120536.glb", 0.093f, AU * 9.58f, 0.6f, 10.0f);
+    Planet uranus("../Uranus_1_51118.glb", 0.04f, AU * 19.2f, 0.2f, 10.0f);
+    Planet neptune("../Neptune_1_49528.glb", 0.038f, AU * 30.1f, 0.1f, 10.0f);
+
+
 
     glCheckError();
 
@@ -367,7 +370,7 @@ int main(void) {
         planetShader.setMat4("view", view);
         planetShader.setVec3("lightPos", sunPos);
 
-        merkur.Draw(planetShader);
+        mercury.Draw(planetShader);
 
         // Jupiter
         // view/projection transformations
