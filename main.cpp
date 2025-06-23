@@ -236,7 +236,7 @@ float AU = 120.0f; // Astronomical Unit, used to scale the solar system
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     int width, height, nrChannels;
-    unsigned char *data = stbi_load("../images/glow.png", &width, &height, &nrChannels, 0);
+    unsigned char *data = stbi_load("../images/soft_glow.png", &width, &height, &nrChannels, 0);
 
     if (data) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
@@ -362,7 +362,7 @@ float AU = 120.0f; // Astronomical Unit, used to scale the solar system
         planetShader.setMat4("view", view);
         planetShader.setVec3("lightPos", sunPos);
 
-        venus.Draw(planetShader); 
+        venus.Draw(planetShader);
 
         // Merkur
         // view/projection transformations
