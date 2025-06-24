@@ -197,19 +197,35 @@ int main(void) {
     Shader skyboxShader("../shaders/skybox.vs", "../shaders/skybox.fs");
     glCheckError();
 
-float AU = 120.0f; // Astronomical Unit, used to scale the solar system
+    float AU = 120.0f; // Astronomical Unit, used to scale the solar system
 
     Planet sun("../models/Sun_1_1391000.glb", 50.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-    Planet mercury("../models/Mercury_1_4878.glb", 0.0038f, AU * 0.39f, 42.0f, 10.0f, 0.03f);
-    Planet venus("../models/Venus_1_12103.glb", 0.0095f, AU * 0.72f, 16.0f, 10.0f, 177.4f);
-    Planet earth("../models/Earth_1_12756.glb", 0.01f, AU * 1.00f, 10.0f, 10.0f, 23.5f, 
-                 true, 10.0f, glm::vec4(0.9f, 0.5f, 0.8f, 0.5f));
+
+    // Planeten mit elliptischer Umlaufbahn (letzter Parameter = ellipticity)
+    Planet mercury("../models/Mercury_1_4878.glb", 0.0038f, AU * 0.39f, 42.0f, 10.0f, 0.03f,
+                false, 0.0f, glm::vec4(0.0f), 0.8f);  // sehr elliptisch
+
+    Planet venus("../models/Venus_1_12103.glb", 0.0095f, AU * 0.72f, 16.0f, 10.0f, 177.4f,
+                false, 0.0f, glm::vec4(0.0f), 0.95f);  // fast kreisförmig
+
+    Planet earth("../models/Earth_1_12756.glb", 0.01f, AU * 1.00f, 10.0f, 10.0f, 23.5f,
+                true, 10.0f, glm::vec4(0.9f, 0.5f, 0.8f, 0.5f), 0.98f);
+
     Planet mars("../models/24881_Mars_1_6792.glb", 0.0053f, AU * 1.52f, 5.0f, 10.0f, 25.2f,
-                 true, 5.0f, glm::vec4(0.9f, 0.4f, 0.2f, 0.4f));
-    Planet jupiter("../models/Jupiter_1_142984.glb", 0.112f, AU * 5.20f, 1.0f, 10.0f, 3.1f);
-    Planet saturn("../models/Saturn_1_120536.glb", 0.093f, AU * 9.58f, 0.6f, 10.0f, 26.7f);
-    Planet uranus("../models/Uranus_1_51118.glb", 0.04f, AU * 19.2f, 0.2f, 10.0f, 97.8f);
-    Planet neptune("../models/Neptune_1_49528.glb", 0.038f, AU * 30.1f, 0.1f, 10.0f, 28.3f);
+                true, 5.0f, glm::vec4(0.9f, 0.4f, 0.2f, 0.4f), 0.92f);
+
+    Planet jupiter("../models/Jupiter_1_142984.glb", 0.112f, AU * 5.20f, 1.0f, 10.0f, 3.1f,
+                false, 0.0f, glm::vec4(0.0f), 0.96f);
+
+    Planet saturn("../models/Saturn_1_120536.glb", 0.093f, AU * 9.58f, 0.6f, 10.0f, 26.7f,
+                false, 0.0f, glm::vec4(0.0f), 0.95f);
+
+    Planet uranus("../models/Uranus_1_51118.glb", 0.04f, AU * 19.2f, 0.2f, 10.0f, 97.8f,
+                false, 0.0f, glm::vec4(0.0f), 0.94f);
+
+    Planet neptune("../models/Neptune_1_49528.glb", 0.038f, AU * 30.1f, 0.1f, 10.0f, 28.3f,
+               false, 0.0f, glm::vec4(0.0f), 0.96f);
+
 
 
 
