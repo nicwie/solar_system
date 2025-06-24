@@ -202,8 +202,10 @@ float AU = 120.0f; // Astronomical Unit, used to scale the solar system
     Planet sun("../models/Sun_1_1391000.glb", 50.0f, 0.0f, 0.0f, 1.0f);
     Planet mercury("../models/Mercury_1_4878.glb", 0.0038f, AU * 0.39f, 42.0f, 10.0f);
     Planet venus("../models/Venus_1_12103.glb", 0.0095f, AU * 0.72f, 16.0f, 10.0f);
-    Planet earth("../models/Earth_1_12756.glb", 0.01f, AU * 1.00f, 10.0f, 10.0f);
-    Planet mars("../models/24881_Mars_1_6792.glb", 0.0053f, AU * 1.52f, 5.0f, 10.0f);
+    Planet earth("../models/Earth_1_12756.glb", 0.01f, AU * 1.00f, 10.0f, 10.0f, 
+                 true, 10.0f, glm::vec4(0.9f, 0.5f, 0.8f, 0.5f));
+    Planet mars("../models/24881_Mars_1_6792.glb", 0.0053f, AU * 1.52f, 5.0f, 10.0f,
+                 true, 5.0f, glm::vec4(0.9f, 0.4f, 0.2f, 0.4f));
     Planet jupiter("../models/Jupiter_1_142984.glb", 0.112f, AU * 5.20f, 1.0f, 10.0f);
     Planet saturn("../models/Saturn_1_120536.glb", 0.093f, AU * 9.58f, 0.6f, 10.0f);
     Planet uranus("../models/Uranus_1_51118.glb", 0.04f, AU * 19.2f, 0.2f, 10.0f);
@@ -297,7 +299,7 @@ float AU = 120.0f; // Astronomical Unit, used to scale the solar system
         // ------
         skybox.Draw(skyboxShader, view, projection); // Shader is activated in Draw func
 
-        // Draw earth glow
+        // Draw glows
         // ------
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -307,25 +309,18 @@ float AU = 120.0f; // Astronomical Unit, used to scale the solar system
         glowShader.setMat4("projection", projection);
         glowShader.setMat4("view", view);
 
-
-        glm::mat4 earthModelMatrix = earth.getModelMatrix();
-        glm::vec3 earthPos = glm::vec3(earthModelMatrix * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-        glm::mat4 glowModelMatrix = glm::translate(glm::mat4(1.0f), earthPos);
-        glowModelMatrix = glowModelMatrix * glm::transpose(glm::mat4(glm::mat3(view)));
-        glowModelMatrix = glm::scale(glowModelMatrix, glm::vec3(10.0f));
-        glowShader.setMat4("model", glowModelMatrix);
-
-
-        // Bind the glow texture and draw the quad
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, glowTexture);
         glBindVertexArray(quadVAO);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+        earth.DrawGlow(glowShader, view);
+        mars.DrawGlow(glowShader, view);
 
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
 
-        // Draw Sun
+
+        // Draw sun
         // ------
         sunShader.use();
         sunShader.setMat4("projection", projection);
@@ -339,7 +334,7 @@ float AU = 120.0f; // Astronomical Unit, used to scale the solar system
         earthShader.setVec3("lightPos", sunPos);
         earth.Draw(earthShader);
 
-        // Mars
+        // Other planets
         planetShader.use();
         planetShader.setMat4("projection", projection);
         planetShader.setMat4("view", view);
