@@ -1,3 +1,4 @@
+#include <glm/detail/qualifier.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_float4x4.hpp>
 #include <glm/ext/matrix_transform.hpp>
@@ -27,7 +28,7 @@
 #include "stb_image.h"
 
 // settings
-const unsigned int SCR_WIDTH = 800;
+const unsigned int SCR_WIDTH = 960;
 const unsigned int SCR_HEIGHT = 600;
 
 // camera, with a starting position looking down
@@ -236,7 +237,7 @@ float AU = 120.0f; // Astronomical Unit, used to scale the solar system
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     int width, height, nrChannels;
-    unsigned char *data = stbi_load("../images/soft_glow.png", &width, &height, &nrChannels, 0);
+    unsigned char *data = stbi_load("../images/soft_glow.png", &width, &height, &nrChannels, 4);
 
     if (data) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
@@ -285,30 +286,35 @@ float AU = 120.0f; // Astronomical Unit, used to scale the solar system
         glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // shared matrices / data
+        // -----
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 3000.0f);
         glm::mat4 view = camera.GetViewMatrix();
+        glm::mat4 sunModelMatrix = sun.getModelMatrix();
+        glm::vec3 sunPos = glm::vec3(sunModelMatrix * glm::vec4(0.0, 0.0, 0.0, 1.0));
 
         // Skybox
-        skyboxShader.use();
-        skybox.Draw(skyboxShader, view, projection);
+        // ------
+        skybox.Draw(skyboxShader, view, projection); // Shader is activated in Draw func
 
-        // Render Earth Glow
+        // Draw earth glow
+        // ------
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glDepthMask(GL_FALSE);
 
         glowShader.use();
+        glowShader.setMat4("projection", projection);
+        glowShader.setMat4("view", view);
+
 
         glm::mat4 earthModelMatrix = earth.getModelMatrix();
         glm::vec3 earthPos = glm::vec3(earthModelMatrix * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-
         glm::mat4 glowModelMatrix = glm::translate(glm::mat4(1.0f), earthPos);
-
         glowModelMatrix = glowModelMatrix * glm::transpose(glm::mat4(glm::mat3(view)));
-
-        glowModelMatrix = glm::scale(glowModelMatrix, glm::vec3(8.0f));
-
+        glowModelMatrix = glm::scale(glowModelMatrix, glm::vec3(10.0f));
         glowShader.setMat4("model", glowModelMatrix);
+
 
         // Bind the glow texture and draw the quad
         glActiveTexture(GL_TEXTURE0);
@@ -316,92 +322,35 @@ float AU = 120.0f; // Astronomical Unit, used to scale the solar system
         glBindVertexArray(quadVAO);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-        glowShader.setMat4("projection", projection);
-        glowShader.setMat4("view", view);
-
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
 
         // Draw Sun
+        // ------
         sunShader.use();
-
-        // view/projection transformations
         sunShader.setMat4("projection", projection);
         sunShader.setMat4("view", view);
-
         sun.Draw(sunShader);
-
-
-        glm::mat4 sunModelMatrix = sun.getModelMatrix();
-
-        glm::vec3 sunPos = glm::vec3(sunModelMatrix * glm::vec4(0.0, 0.0, 0.0, 1.0));
 
         // Earth
         earthShader.use();
-
-        // view/projection transformations
-        planetShader.setMat4("projection", projection);
-        planetShader.setMat4("view", view);
-        planetShader.setVec3("lightPos", sunPos);
-
-        earth.Draw(planetShader);
+        earthShader.setMat4("projection", projection);
+        earthShader.setMat4("view", view);
+        earthShader.setVec3("lightPos", sunPos);
+        earth.Draw(earthShader);
 
         // Mars
         planetShader.use();
-
-        // view/projection transformations
-        planetShader.setMat4("projection", projection);
-        planetShader.setMat4("view", view);
-        planetShader.setVec3("lightPos", sunPos);
-
-        mars.Draw(planetShader);
-
-        // Venus
-        // view/projection transformations
-        planetShader.setMat4("projection", projection);
-        planetShader.setMat4("view", view);
-        planetShader.setVec3("lightPos", sunPos);
-
-        venus.Draw(planetShader);
-
-        // Merkur
-        // view/projection transformations
         planetShader.setMat4("projection", projection);
         planetShader.setMat4("view", view);
         planetShader.setVec3("lightPos", sunPos);
 
         mercury.Draw(planetShader);
-
-        // Jupiter
-        // view/projection transformations
-        planetShader.setMat4("projection", projection);
-        planetShader.setMat4("view", view);
-        planetShader.setVec3("lightPos", sunPos);
-
+        venus.Draw(planetShader);
+        mars.Draw(planetShader);
         jupiter.Draw(planetShader);
-
-        // Saturn
-        // view/projection transformations
-        planetShader.setMat4("projection", projection);
-        planetShader.setMat4("view", view);
-        planetShader.setVec3("lightPos", sunPos);
-
         saturn.Draw(planetShader);
-
-        // Uranus
-        // view/projection transformations
-        planetShader.setMat4("projection", projection);
-        planetShader.setMat4("view", view);
-        planetShader.setVec3("lightPos", sunPos);
-
         uranus.Draw(planetShader);
-
-        // Neptune
-        // view/projection transformations
-        planetShader.setMat4("projection", projection);
-        planetShader.setMat4("view", view);
-        planetShader.setVec3("lightPos", sunPos);
-
         neptune.Draw(planetShader);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
