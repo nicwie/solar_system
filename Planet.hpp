@@ -14,13 +14,14 @@
 
 class Planet {
 public:
-    Planet(const std::string& modelPath, float scale, float orbitalRadius, float orbitalSpeed, float axialSpeed,
+    Planet(const std::string& modelPath, float scale, float orbitalRadius, float orbitalSpeed, float axialSpeed, float axialTiltAngle,
            bool hasGlow = false, float glowScale = 0.0f, glm::vec4 glowTint = glm::vec4(0.0f))
     : model(modelPath),
-      pScale(scale),
-      pOrbitalRadius(orbitalRadius),
-      pOrbitalSpeed(orbitalSpeed),
-      pAxialSpeed(axialSpeed),
+      p_Scale(scale),
+      p_OrbitalRadius(orbitalRadius),
+      p_OrbitalSpeed(orbitalSpeed),
+      p_AxialSpeed(axialSpeed),
+      p_AxialTiltAngle(axialTiltAngle),
       p_hasGlow(hasGlow),
       p_glowScale(glowScale),
       p_glowTint(glowTint) {}
@@ -32,17 +33,25 @@ public:
     glm::mat4 getModelMatrix() {
         glm::mat4 modelMatrix = glm::mat4(1.0f);
 
+        // Orbital Rotation
         modelMatrix = glm::rotate(modelMatrix,
-                                  glm::radians((float)glfwGetTime() * pOrbitalSpeed),
+                                  glm::radians((float)glfwGetTime() * p_OrbitalSpeed),
                                   glm::vec3(0.0f, 1.0f, 0.0f));
 
-        modelMatrix = glm::translate(modelMatrix, glm::vec3(pOrbitalRadius, 0.0f, 0.0f));
+        // Translation
+        modelMatrix = glm::translate(modelMatrix, glm::vec3(p_OrbitalRadius, 0.0f, 0.0f));
 
+        // Axial Tilt
+        // We tilt around the Z-Axis
+        modelMatrix = glm::rotate(modelMatrix, glm::radians(p_AxialTiltAngle), glm::vec3(0.0f,0.0f,1.0f));
+
+        // Daily Spin
         modelMatrix = glm::rotate(modelMatrix,
-                                  glm::radians((float)glfwGetTime() * pAxialSpeed),
+                                  glm::radians((float)glfwGetTime() * p_AxialSpeed),
                                   glm::vec3(0.0f, 1.0f, 0.0f));
 
-        modelMatrix = glm::scale(modelMatrix, glm::vec3(pScale));
+        // Scale
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(p_Scale));
 
         return modelMatrix;
     }
@@ -77,10 +86,11 @@ public:
 private:
     Model model;
 
-    float pScale; // The planet's scale, this will probably be the same for all planets
-    float pOrbitalRadius; // How far the planet orbits from the center
-    float pOrbitalSpeed;
-    float pAxialSpeed;
+    float p_Scale;
+    float p_OrbitalRadius;
+    float p_OrbitalSpeed;
+    float p_AxialSpeed;
+    float p_AxialTiltAngle;
 
     // Glow properties
     bool p_hasGlow;

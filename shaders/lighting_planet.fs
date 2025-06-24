@@ -27,7 +27,7 @@ void main()
     float specularStrength = 0.2;
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 halfwayDir = normalize(lightDir + viewDir);
-    float spec = pow(max(dot(norm, halfwayDir), 0.0), 5.0); // last value is shininess
+    float spec = pow(max(dot(norm, halfwayDir), 0.0), 1.0); // last value is shininess
     vec3 specular = specularStrength * spec * lightColor;
 
     // Rim lighting
