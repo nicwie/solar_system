@@ -12,6 +12,7 @@
 #include <assimp/postprocess.h>
 #include "Shader.hpp"
 #include "Mesh.hpp"
+#include "Skybox.hpp"
 #include "stb_image.h"
 
 class Model;
@@ -55,7 +56,7 @@ inline unsigned int TextureFromFile(const char *path, const std::string &directo
         glGenerateMipmap(GL_TEXTURE_2D);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -65,6 +66,8 @@ inline unsigned int TextureFromFile(const char *path, const std::string &directo
     {
         std::cout << "Texture failed to load at path: " << path << std::endl;
         stbi_image_free(data);
+        glDeleteTextures(1, &textureID);
+        textureID = 0;
     }
 
     return textureID;
@@ -100,8 +103,11 @@ public:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
+            float maxAnisotropy = 8.0f;
+            glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
             stbi_image_free(data);
         } else {
             std::cout << "Texture failed to load at path: " << path << std::endl;

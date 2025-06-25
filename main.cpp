@@ -14,6 +14,7 @@
 #include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
+#include <iterator>
 #include <ostream>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -177,8 +178,13 @@ int main(void) {
         return -1;
     }
 
+    float maxAnisotropy;
+    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
+    std::cout << maxAnisotropy << std::endl;
+
     // This is done so that textures are rendered according to their z distance from us
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
 
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
@@ -198,14 +204,13 @@ int main(void) {
     Shader skyboxShader("../shaders/skybox.vs", "../shaders/skybox.fs");
     glCheckError();
 
-    unsigned int earthDayTexID = Model::loadTexture("../images/2k_earth_daymap.jpg");
 
 float AU = 120.0f; // Astronomical Unit, used to scale the solar system
 
     Planet sun("../models/Sun_1_1391000.glb", 50.0f, 0.0f, 0.0f, 1.0f, 0.0f);
     Planet mercury("../models/Mercury_1_4878.glb", 0.0038f, AU * 0.39f, 42.0f, 10.0f, 0.03f);
     Planet venus("../models/Venus_1_12103.glb", 0.0095f, AU * 0.72f, 16.0f, 10.0f, 177.4f);
-    Earth earth(earthDayTexID, "../models/Earth_1_12756.glb", "../images/8k_earth_daymap.jpg", "../images/8k_earth_nightmap.jpg", "", 0.01f, AU * 1.00f, 10.0f, 10.0f, 23.5f, 
+    Earth earth("../models/Earth_1_12756.glb", "../images/seamless_earth_8k.png", "../images/seamless_earth_night_8k.png", "", 0.01f, AU * 1.00f, 10.0f, 10.0f, 23.5f, 
                  true, 10.0f, glm::vec4(0.9f, 0.5f, 0.8f, 0.5f));
     Planet mars("../models/24881_Mars_1_6792.glb", 0.0053f, AU * 1.52f, 5.0f, 10.0f, 25.2f,
                  true, 5.0f, glm::vec4(0.9f, 0.4f, 0.2f, 0.4f));

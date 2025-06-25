@@ -70,11 +70,12 @@ out vec4 FragColor;
 in vec2 TexCoords;
 
 // We only need one texture for this test
-uniform sampler2D texture_day;
+uniform sampler2D texture_diffuse1;
 
 void main()
 {
     // Ignore all lighting, blending, and effects.
     // Just output the color directly from the day texture.
-    FragColor = texture(texture_day, TexCoords);
+    FragColor = texture(texture_diffuse1, TexCoords);
+    // FragColor = vec4(TexCoords.x, TexCoords.y, 0.0, 1.0);
 }
