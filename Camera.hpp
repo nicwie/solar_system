@@ -38,6 +38,13 @@ public:
     float MovementSpeed;
     float MouseSensitivity;
     float Zoom;
+    // Orbiting 
+    bool isOrbiting;
+    // Initial Camera
+    glm::vec3 initialPosition;
+    float initialYaw;
+    float initialPitch;
+    float initialZoom;
 
     // constructor with vectors
     Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM) {
@@ -45,20 +52,52 @@ public:
         WorldUp = up;
         Yaw = yaw;
         Pitch = pitch;
+        isOrbiting = false;
+
+        // Store initial values for reset
+        initialPosition = Position;
+        initialYaw = yaw;
+        initialPitch = pitch;
+        initialZoom = Zoom;
+
         updateCameraVectors();
     }
+
     // constructor with scalars
     Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM) {
         Position = glm::vec3(posX, posY, posZ);
         WorldUp = glm::vec3(upX, upY, upZ);
         Yaw = yaw;
         Pitch = pitch;
+
+        // Store initial values for reset
+        initialPosition = Position;
+        initialYaw = yaw;
+        initialPitch = pitch;
+        initialZoom = Zoom;
+
         updateCameraVectors();
     }
 
     // returns view matrix
     glm::mat4 GetViewMatrix() {
         return glm::lookAt(Position, Position + Front, Up);
+    }
+
+    void lookAt(glm::vec3 target) {
+        Front = glm::normalize(target - Position);
+
+        Right = glm::normalize(glm::cross(Front, WorldUp));
+        Up    = glm::normalize(glm::cross(Right, Front));
+    }
+
+    void Reset() {
+        Position = initialPosition;
+        Yaw = initialYaw;
+        Pitch = initialPitch;
+        Zoom = initialZoom;
+        isOrbiting = false;
+        updateCameraVectors();
     }
 
     // process input from keyboard-like

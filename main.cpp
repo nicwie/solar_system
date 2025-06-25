@@ -81,14 +81,38 @@ GLenum glCheckError_(const char *file, int line) {
 void processInput(GLFWwindow *window) {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, deltaTime);
+
+    static bool zeroPressedLastFrame = false;
+    static bool onePressedLastFrame = false;
+
+    bool zeroPressedThisFrame = glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS;
+    bool onePressedThisFrame = glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS;
+
+   // Use edge detection
+   if (zeroPressedThisFrame && !zeroPressedLastFrame) {
+       camera.isOrbiting = true;
+       firstMouse = true; // Reset mouse tracking to prevent camera jump when orbit ends
+   }
+   if (onePressedThisFrame && !onePressedLastFrame) {
+       camera.Reset(); // Resets camera to initial position and sets isOrbiting to false
+   }
+
+   zeroPressedLastFrame = zeroPressedThisFrame;
+   onePressedLastFrame = onePressedThisFrame;
+
+   // --- NEW: If camera is orbiting, do not process any other movement input ---
+   if (camera.isOrbiting) {
+       return;
+   }
+
+   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+       camera.ProcessKeyboard(FORWARD, deltaTime);
+   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+       camera.ProcessKeyboard(BACKWARD, deltaTime);
+   if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+       camera.ProcessKeyboard(LEFT, deltaTime);
+   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+       camera.ProcessKeyboard(RIGHT, deltaTime);
 
     // We need to do all of this because we want edge detection: We don't need flickering if the user holds space
     static bool spacePressedLastFrame = false;
@@ -96,20 +120,25 @@ void processInput(GLFWwindow *window) {
 
     bool spacePressedThisFrame = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
 
-    if(spacePressedThisFrame && !spacePressedLastFrame) { // This is for debugging, being able to swap to and from wireframe mode
+   if(spacePressedThisFrame && !spacePressedLastFrame) { // This is for debugging, being able to swap to and from wireframe mode
 
-        if (isWireframe)
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        else
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+       if (isWireframe)
+           glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+       else
+           glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-        isWireframe = !isWireframe;
-    }
+       isWireframe = !isWireframe;
+   }
 
-    spacePressedLastFrame = spacePressedThisFrame;
+   spacePressedLastFrame = spacePressedThisFrame;
 }
 
 void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
+
+    if (camera.isOrbiting) {
+        return;
+    }
+
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
 
@@ -129,6 +158,9 @@ void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+    if (camera.isOrbiting) {
+        return;
+    }
     camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
@@ -190,7 +222,7 @@ int main(void) {
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-    // Background color (here , Black)
+    // Background color (here, black)
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
     glCheckError();
@@ -306,6 +338,25 @@ int main(void) {
         // input
         // -----
         processInput(window);
+
+
+        // Camera orbiting logic
+        if (camera.isOrbiting) {
+            // Get the Earth current world position
+            glm::vec3 earthPos = glm::vec3(earth.getModelMatrix() * glm::vec4(0.0, 0.0, 0.0, 1.0));
+
+            // Define orbit parameters
+            float orbitRadius = 15.0f;  // How far from the Earth to orbit
+            float orbitSpeed  = 0.2f;   // How fast to orbit
+            float orbitHeight = 5.0f;   // How high above the Earth's equator to be
+
+            // Calculate the new camera position
+            camera.Position.x = earthPos.x + orbitRadius * cos(currentFrame * orbitSpeed);
+            camera.Position.z = earthPos.z + orbitRadius * sin(currentFrame * orbitSpeed);
+            camera.Position.y = earthPos.y + orbitHeight;
+
+            camera.lookAt(earthPos);
+        }
 
         // render
         // ------
