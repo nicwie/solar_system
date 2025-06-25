@@ -16,8 +16,6 @@
 
 class Model;
 
-// unsigned int TextureFromFile(const char *path, const std::string &directory, const aiScene* scene);
-
 inline unsigned int TextureFromFile(const char *path, const std::string &directory, const aiScene* scene) {
     unsigned int textureID;
     glGenTextures(1, &textureID);
@@ -27,16 +25,15 @@ inline unsigned int TextureFromFile(const char *path, const std::string &directo
 
     // Check if the path indicates an embedded texture
     if (path[0] == '*') {
-        // std::cout << "Loading embedded texture: " << path << std::endl;
         // Get the index of the embedded texture
         int textureIndex = std::stoi(std::string(path).substr(1));
         const aiTexture* embeddedTexture = scene->mTextures[textureIndex];
 
-        // mHeight == 0 indicates a compressed format (like png or jpg)
+        // mHeight == 0 indicates a compressed format
         // The raw data is stored in pcData, with mWidth as the size of the data in bytes
         data = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(embeddedTexture->pcData), embeddedTexture->mWidth, &width, &height, &nrComponents, 0);
     } else {
-        // It's a regular file path
+        // regular file path
         std::string filename = std::string(path);
         filename = directory + '/' + filename;
         std::cout << "Loading texture from file: " << filename << std::endl;
@@ -79,10 +76,41 @@ public:
     Model(std::string path) {
         loadModel(path);
     }
-    void Draw(Shader &shader) {
+    void Draw() {
         for (unsigned int i = 0; i < meshes.size(); i++)
-            meshes[i].Draw(shader);
+            meshes[i].Draw();
     }
+
+
+    static unsigned int loadTexture(const std::string& path) {
+        unsigned int textureID;
+        glGenTextures(1, &textureID);
+
+        int width, height, nrChannels;
+
+        unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrChannels, 4);
+
+        if (data) {
+            GLenum format = GL_RGBA;
+
+            glBindTexture(GL_TEXTURE_2D, textureID);
+            glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+            glGenerateMipmap(GL_TEXTURE_2D);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            stbi_image_free(data);
+        } else {
+            std::cout << "Texture failed to load at path: " << path << std::endl;
+            stbi_image_free(data);
+        }
+
+        return textureID;
+    }
+
 private:
     std::vector<Texture> textures_loaded;
     std::string directory;
