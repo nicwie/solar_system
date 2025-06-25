@@ -290,7 +290,7 @@ float AU = 120.0f; // Astronomical Unit, used to scale the solar system
 
         // shared matrices / data
         // -----
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 3000.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 4000.0f);
         glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 sunModelMatrix = sun.getModelMatrix();
         glm::vec3 sunPos = glm::vec3(sunModelMatrix * glm::vec4(0.0, 0.0, 0.0, 1.0));
