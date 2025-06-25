@@ -27,7 +27,7 @@ public:
         : model(modelPath),
           p_Scale(scale),
           p_OrbitalRadius(orbitalRadius),
-          p_OrbitalSpeed(orbitalSpeed),
+          p_OrbitalSpeed(orbitalSpeed * 0.025), // Changed rate here
           p_AxialSpeed(axialSpeed),
           p_AxialTiltAngle(axialTiltAngle),
           p_hasGlow(hasGlow),
