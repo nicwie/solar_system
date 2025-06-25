@@ -14,7 +14,6 @@
 #include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
-#include <iterator>
 #include <ostream>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -210,7 +209,7 @@ float AU = 120.0f; // Astronomical Unit, used to scale the solar system
     Planet sun("../models/Sun_1_1391000.glb", 50.0f, 0.0f, 0.0f, 1.0f, 0.0f);
     Planet mercury("../models/Mercury_1_4878.glb", 0.0038f, AU * 0.39f, 42.0f, 10.0f, 0.03f);
     Planet venus("../models/Venus_1_12103.glb", 0.0095f, AU * 0.72f, 16.0f, 10.0f, 177.4f);
-    Earth earth("../models/Earth_1_12756.glb", "../images/seamless_earth_8k.png", "../images/seamless_earth_night_8k.png", "", 0.01f, AU * 1.00f, 10.0f, 10.0f, 23.5f, 
+    Earth earth("../models/earth(1).glb", "../images/2k_earth_daymap.jpg", "../images/2k_earth_nightmap.jpg", "../images/2k_earth_clouds.jpg", 4.01f, AU * 1.00f, 8.0f, 10.0f, 23.5f, 
                  true, 10.0f, glm::vec4(0.9f, 0.5f, 0.8f, 0.5f));
     Planet mars("../models/24881_Mars_1_6792.glb", 0.0053f, AU * 1.52f, 5.0f, 10.0f, 25.2f,
                  true, 5.0f, glm::vec4(0.9f, 0.4f, 0.2f, 0.4f));
@@ -293,7 +292,8 @@ float AU = 120.0f; // Astronomical Unit, used to scale the solar system
 
         // render
         // ------
-        glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+        // ClearColor magento to notice errors
+        glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // shared matrices / data
@@ -340,6 +340,7 @@ float AU = 120.0f; // Astronomical Unit, used to scale the solar system
         earthShader.setMat4("projection", projection);
         earthShader.setMat4("view", view);
         earthShader.setVec3("lightPos", sunPos);
+        earthShader.setFloat("u_time", (float)glfwGetTime());
         earth.Draw(earthShader);
 
         // Other planets

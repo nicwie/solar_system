@@ -15,63 +15,6 @@
 #include "Skybox.hpp"
 #include "stb_image.h"
 
-class Model;
-
-inline unsigned int TextureFromFile(const char *path, const std::string &directory, const aiScene* scene) {
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
-
-    int width, height, nrComponents;
-    unsigned char *data = nullptr;
-
-    // Check if the path indicates an embedded texture
-    if (path[0] == '*') {
-        // Get the index of the embedded texture
-        int textureIndex = std::stoi(std::string(path).substr(1));
-        const aiTexture* embeddedTexture = scene->mTextures[textureIndex];
-
-        // mHeight == 0 indicates a compressed format
-        // The raw data is stored in pcData, with mWidth as the size of the data in bytes
-        data = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(embeddedTexture->pcData), embeddedTexture->mWidth, &width, &height, &nrComponents, 0);
-    } else {
-        // regular file path
-        std::string filename = std::string(path);
-        filename = directory + '/' + filename;
-        std::cout << "Loading texture from file: " << filename << std::endl;
-        data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
-    }
-
-    if (data)
-    {
-        GLenum format;
-        if (nrComponents == 1)
-            format = GL_RED;
-        else if (nrComponents == 3)
-            format = GL_RGB;
-        else if (nrComponents == 4)
-            format = GL_RGBA;
-
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        stbi_image_free(data);
-    }
-    else
-    {
-        std::cout << "Texture failed to load at path: " << path << std::endl;
-        stbi_image_free(data);
-        glDeleteTextures(1, &textureID);
-        textureID = 0;
-    }
-
-    return textureID;
-}
 
 class Model {
 public:
@@ -84,34 +27,104 @@ public:
             meshes[i].Draw();
     }
 
-
     static unsigned int loadTexture(const std::string& path) {
-        unsigned int textureID;
+        unsigned int textureID = 0;
         glGenTextures(1, &textureID);
 
         int width, height, nrChannels;
+        // CRITICAL: Load the texture with its native channel count by passing 0.
+        unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
 
-        unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrChannels, 4);
+        if (data)
+        {
+            GLenum format;
+            if (nrChannels == 1)
+                format = GL_RED;
+            else if (nrChannels == 3)
+                format = GL_RGB;
+            else if (nrChannels == 4)
+                format = GL_RGBA;
+            else {
+                std::cerr << "Texture at " << path << " has unsupported channel count: " << nrChannels << std::endl;
+                stbi_image_free(data);
+                glDeleteTextures(1, &textureID);
+                return 0; // Return 0 to indicate failure
+            }
 
-        if (data) {
-            GLenum format = GL_RGBA;
+            glBindTexture(GL_TEXTURE_2D, textureID);
+            // Use the correctly determined format for both internal storage and source data.
+            glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+            glGenerateMipmap(GL_TEXTURE_2D);
+
+            // --- Use IDENTICAL parameters to the original working code for this final test ---
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            stbi_image_free(data);
+        }
+        else
+        {
+            std::cout << "Texture failed to load at path: " << path << std::endl;
+            glDeleteTextures(1, &textureID); // Clean up the unused texture object
+            textureID = 0;
+        }
+
+        return textureID;
+    }
+
+    unsigned int loadTexture(const char *path, const std::string &directory, const aiScene* scene) {
+        unsigned int textureID;
+        glGenTextures(1, &textureID);
+
+        int width, height, nrComponents;
+        unsigned char *data = nullptr;
+
+        // Check if the path indicates an embedded texture
+        if (path[0] == '*') {
+            // Get the index of the embedded texture
+            int textureIndex = std::stoi(std::string(path).substr(1));
+            const aiTexture* embeddedTexture = scene->mTextures[textureIndex];
+
+            // mHeight == 0 indicates a compressed format
+            // The raw data is stored in pcData, with mWidth as the size of the data in bytes
+            data = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(embeddedTexture->pcData), embeddedTexture->mWidth, &width, &height, &nrComponents, 0);
+        } else {
+            // regular file path
+            std::string filename = std::string(path);
+            filename = directory + '/' + filename;
+            std::cout << "Loading texture from file: " << filename << std::endl;
+            data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
+        }
+
+        if (data)
+        {
+            GLenum format;
+            if (nrComponents == 1)
+                format = GL_RED;
+            else if (nrComponents == 3)
+                format = GL_RGB;
+            else if (nrComponents == 4)
+                format = GL_RGBA;
 
             glBindTexture(GL_TEXTURE_2D, textureID);
             glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
             glGenerateMipmap(GL_TEXTURE_2D);
 
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-            float maxAnisotropy = 8.0f;
-            glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
             stbi_image_free(data);
-        } else {
+        }
+        else
+        {
             std::cout << "Texture failed to load at path: " << path << std::endl;
             stbi_image_free(data);
+            glDeleteTextures(1, &textureID);
+            textureID = 0;
         }
 
         return textureID;
@@ -124,7 +137,8 @@ private:
     void loadModel(std::string path) {
         Assimp::Importer import;
         const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate |
-                                                    aiProcess_FlipUVs);
+                                                    aiProcess_FlipUVs |
+                                                    aiProcess_GenNormals);
 
         if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
             !scene->mRootNode) {
@@ -213,7 +227,7 @@ private:
             }
             if (!skip) {
                 Texture texture;
-                texture.id = TextureFromFile(str.C_Str(), directory, scene);
+                texture.id = loadTexture(str.C_Str(), directory, scene);
                 texture.type = typeName;
                 texture.path = str.C_Str();
                 textures.push_back(texture);

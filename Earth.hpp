@@ -11,34 +11,39 @@ class Earth : public Planet {
 public:
     Earth(const std::string& ModelPath, const std::string& dayTexturePath, const std::string& nightTexturePath, const std::string& cloudTexturePath, float scale, float orbitalRadius, float orbitalSpeed, float axialSpeed, float axialTiltAngle,
            bool hasGlow = false, float glowScale = 0.0f, glm::vec4 glowTint = glm::vec4(0.0f))
-        : Planet(ModelPath, scale, orbitalRadius, orbitalSpeed, axialSpeed, axialTiltAngle, hasGlow, glowScale, glowTint) {
- 
-        // 1. Load your custom texture and get its ID
-        unsigned int customDayTextureID = model.loadTexture(dayTexturePath);
+        : Planet(ModelPath, scale, orbitalRadius, orbitalSpeed, axialSpeed, axialTiltAngle, hasGlow, glowScale, glowTint) 
+    {
+        p_dayTextureID = model.loadTexture(dayTexturePath);
+        p_nightTextureID = model.loadTexture(nightTexturePath);
+        p_cloudTextureID = model.loadTexture(cloudTexturePath);
+    };
+
+    void Draw(Shader& shader) override {
+        // 1. Set the uniforms that this shader needs
+        glm::mat4 modelMatrix = getModelMatrix();
+        shader.setMat4("model", modelMatrix);
+        shader.setInt("texture_day", 0);
+        shader.setInt("texture_night", 1);
+        shader.setInt("texture_clouds", 2);
         
-        // You could load night/cloud textures here too if needed
-        // unsigned int customNightTextureID = model.loadTexture(nightTexturePath);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, p_dayTextureID);
 
-        // 2. Find and replace the texture ID in the model's data structure
-        // Loop through all the meshes that were loaded by Assimp
-        for (Mesh& mesh : model.meshes) {
-            // Loop through all the textures associated with THIS mesh
-            for (Texture& texture : mesh.textures) {
-                // Check if this is the diffuse texture (the main color texture)
-                if (texture.type == "texture_diffuse") {
-                    // We found it. Replace its ID with our new custom texture ID.
-                    // It's a good idea to delete the old texture to prevent memory leaks.
-                    glDeleteTextures(1, &texture.id); 
-                    texture.id = customDayTextureID;
-                    
-                    // Optional: Update the path for debugging/consistency
-                    texture.path = dayTexturePath;
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, p_nightTextureID);
 
-                    // break from the inner loops if you only expect one diffuse texture per mesh
-                }
-            }
-        }
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, p_cloudTextureID);
+
+        this->model.Draw();
+
+        glActiveTexture(GL_TEXTURE0);
     }
+
+private:
+    unsigned int p_nightTextureID;
+    unsigned int p_dayTextureID;
+    unsigned int p_cloudTextureID;
 };
 
 #endif  // INCLUDE_SOLAR_SYSTEM_EARTH_HPP_
