@@ -9,7 +9,11 @@
 #include <iostream>
 
 #include <GL/glew.h>
-#include <GL/gl.h>
+#ifdef __APPLE__
+    #include <OpenGL/gl.h> // Just for macOS
+#else
+    #include <GL/gl.h>
+#endif
 
 #include <GLFW/glfw3.h>
 
@@ -150,6 +154,7 @@ int main(void) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // Just for MacOS
+    glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE); // Fullscreen MacOS
 #endif
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 

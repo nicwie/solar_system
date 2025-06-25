@@ -7,7 +7,11 @@
 #include <sstream>
 #include <iostream>
 #include <GL/glew.h>
-#include <GL/gl.h>
+#ifdef __APPLE__
+    #include <OpenGL/gl.h> // Just for macOS
+#else
+    #include <GL/gl.h>
+#endif
 
 /**
  * @brief This is our shader class, which reads GSLS files and links them automatically
