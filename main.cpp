@@ -248,7 +248,7 @@ int main(void) {
     Planet venus("../models/Venus_1_12103.glb", 0.0095f, AU * 0.72f, 16.0f, 10.0f, 177.4f,
                 false, 0.0f, glm::vec4(0.0f), 0.95f);  // fast kreisförmig
 
-    Earth earth("../models/earth(1).glb", "../images/2k_earth_daymap.jpg", "../images/2k_earth_nightmap.jpg", "../images/2k_earth_clouds.jpg", 4.01f, AU * 1.52f, 10.0f, 10.0f, 23.5f, 0.98f,
+    Earth earth("../models/earth(1).glb", "../images/2k_earth_daymap.jpg", "../images/2k_earth_nightmap.jpg", "../images/2k_earth_clouds.jpg", 4.01f, AU * 1.0f, 10.0f, 10.0f, 23.5f, 0.98f,
                  true, 10.0f, glm::vec4(0.9f, 0.5f, 0.8f, 0.5f));
 
     Planet mars("../models/24881_Mars_1_6792.glb", 0.0053f, AU * 1.52f, 5.0f, 10.0f, 25.2f,
@@ -341,6 +341,7 @@ int main(void) {
 
 
         // Camera orbiting logic
+        // -----
         if (camera.isOrbiting) {
             // Get the Earth current world position
             glm::vec3 earthPos = glm::vec3(earth.getModelMatrix() * glm::vec4(0.0, 0.0, 0.0, 1.0));
@@ -348,7 +349,7 @@ int main(void) {
             // Define orbit parameters
             float orbitRadius = 15.0f;  // How far from the Earth to orbit
             float orbitSpeed  = 0.2f;   // How fast to orbit
-            float orbitHeight = 5.0f;   // How high above the Earth's equator to be
+            float orbitHeight = 1.0f;   // How high above the Earth's equator to be
 
             // Calculate the new camera position
             camera.Position.x = earthPos.x + orbitRadius * cos(currentFrame * orbitSpeed);
