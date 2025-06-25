@@ -66,10 +66,41 @@ public:
     /**
      * @brief Draws the planet model itself.
      */
-    void Draw(Shader& shader) {
+    virtual void Draw(Shader& shader) {
+        // Set the overall model matrix once
         glm::mat4 modelMatrix = getModelMatrix();
         shader.setMat4("model", modelMatrix);
-        this->model.Draw(shader);
+
+        // Loop through each mesh in the model
+        for (unsigned int i = 0; i < model.meshes.size(); i++) {
+            Mesh& mesh = model.meshes[i]; // Get a reference to the current mesh
+
+            // --- Bind textures FOR THIS MESH ONLY ---
+            unsigned int diffuseNr = 1;
+            unsigned int specularNr = 1;
+            for (unsigned int j = 0; j < mesh.textures.size(); j++) {
+                glActiveTexture(GL_TEXTURE0 + j);
+
+                std::string number;
+                std::string name = mesh.textures[j].type;
+                if(name == "texture_diffuse")
+                    number = std::to_string(diffuseNr++);
+                else if (name == "texture_specular")
+                    number = std::to_string(specularNr++);
+
+                // Set the sampler uniform. Note: You may need to adapt your
+                // generic planet shader to handle uniforms like "texture_diffuse1"
+                shader.setInt((name + number).c_str(), j);
+                glBindTexture(GL_TEXTURE_2D, mesh.textures[j].id);
+            }
+
+            // --- IMMEDIATELY draw this mesh ---
+            // Now that the correct textures are bound, draw the current mesh's geometry.
+            mesh.Draw();
+        }
+
+        // It's good practice to reset the active texture unit when done
+        glActiveTexture(GL_TEXTURE0);
     }
 
     /**
@@ -93,7 +124,7 @@ public:
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     }
 
-private:
+protected:
     Model model;
 
     float p_Scale;
