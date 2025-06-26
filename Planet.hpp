@@ -23,7 +23,7 @@ public:
            bool hasGlow = false,
            float glowScale = 0.0f,
            glm::vec4 glowTint = glm::vec4(0.0f),
-           float ellipticity = 1.0f) // <-- neu
+           float ellipticity = 1.0f)
         : model(modelPath),
           p_Scale(scale),
           p_OrbitalRadius(orbitalRadius),
@@ -33,7 +33,7 @@ public:
           p_hasGlow(hasGlow),
           p_glowScale(glowScale),
           p_glowTint(glowTint),
-          p_Ellipticity(ellipticity) {} // <-- neu
+          p_Ellipticity(ellipticity) {}
 
     /**
      * @brief Calculates and returns the model matrix
@@ -99,7 +99,7 @@ public:
             mesh.Draw();
         }
 
-        // It's good practice to reset the active texture unit when done
+        // Reset the active texture unit when done
         glActiveTexture(GL_TEXTURE0);
     }
 
