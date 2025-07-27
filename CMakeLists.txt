@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(GLEW REQUIRED)
-find_package(Assimp REQUIRED)
+find_package(assimp REQUIRED)
 
 # --- CREATE EXECUTABLE TARGET ---
 add_executable(solar_system main.cpp)
