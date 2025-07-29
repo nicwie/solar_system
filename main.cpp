@@ -270,13 +270,13 @@ void processInput(GLFWwindow *window) {
    }
 
    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-       camera.ProcessKeyboard(FORWARD, deltaTime);
+       camera.ProcessKeyboard(Camera::Movement::FORWARD, deltaTime);
    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-       camera.ProcessKeyboard(BACKWARD, deltaTime);
+       camera.ProcessKeyboard(Camera::Movement::BACKWARD, deltaTime);
    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-       camera.ProcessKeyboard(LEFT, deltaTime);
+       camera.ProcessKeyboard(Camera::Movement::LEFT, deltaTime);
    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-       camera.ProcessKeyboard(RIGHT, deltaTime);
+       camera.ProcessKeyboard(Camera::Movement::RIGHT, deltaTime);
 
     // We need to do all of this because we want edge detection: We don't need flickering if the user holds space
     static bool spacePressedLastFrame = false;
