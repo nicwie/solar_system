@@ -10,6 +10,7 @@ in vec3 v_ModelSpacePos; // CHANGED: We now get position instead of normal
 uniform sampler2D texture_day;
 uniform sampler2D texture_night;
 uniform sampler2D texture_clouds;
+uniform sampler2D texture_specMap;
 
 // Uniforms
 uniform vec3 lightPos;
@@ -48,8 +49,8 @@ void main()
     vec2 dUVdy = vec2(dUdy, dVdy);
 
     // Because we flipped textures, the derivatives become negative
-    dUVdx.y = dUVdx.y;
-    dUVdy.y = dUVdy.y;
+    dUVdx.y = - dUVdx.y;
+    dUVdy.y = - dUVdy.y;
 
     // LIGHTING CALCULATION
     vec3 lightColor = vec3(1.0, 1.0, 0.95);
@@ -61,7 +62,7 @@ void main()
     vec3 diffuse = diff * lightColor;
     float ambientStrength = 0.3;
     vec3 ambient = ambientStrength * lightColor;
-    float specularStrength = 0.2;
+    float specularStrength = 0.3;
     float spec = pow(max(dot(norm, halfwayDir), 0.0), 32.0);
     vec3 specular = specularStrength * spec * lightColor;
     float rimPower = 2.0;
@@ -71,6 +72,7 @@ void main()
     // SAMPLE SURFACE AND CLOUDS
     vec3 dayColor = textureGrad(texture_day, finalTexCoords, dUVdx, dUVdy).rgb;
     vec3 nightColor = textureGrad(texture_night, finalTexCoords, dUVdx, dUVdy).rgb;
+    float specStrength = textureGrad(texture_specMap, finalTexCoords, dUVdx, dUVdy).r;
 
     float cloud_u_scrolling = fract(finalTexCoords.x + u_time * 0.03);
     vec2 cloudTexCoords = vec2(cloud_u_scrolling, v);
@@ -85,7 +87,7 @@ void main()
 
     vec3 colorWithClouds = mix(basePlanetColor, cloudColor, cloudIntensity * cloudOpacity * diff);
 
-    vec3 finalColor = colorWithClouds + specular;
+    vec3 finalColor = colorWithClouds + (specular * specStrength);
     finalColor += rimColor * (1.0 - diff) * 0.7;
 
     FragColor = vec4(finalColor, 1.0);

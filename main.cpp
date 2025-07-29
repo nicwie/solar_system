@@ -100,7 +100,6 @@ void processInput(GLFWwindow *window) {
    zeroPressedLastFrame = zeroPressedThisFrame;
    onePressedLastFrame = onePressedThisFrame;
 
-   // --- NEW: If camera is orbiting, do not process any other movement input ---
    if (camera.isOrbiting) {
        return;
    }
@@ -248,7 +247,7 @@ int main(void) {
     Planet venus("../models/Venus_1_12103.glb", 0.0095f, AU * 0.72f, 16.0f, 10.0f, 177.4f,
                 false, 0.0f, glm::vec4(0.0f), 0.95f);  // fast kreisförmig
 
-    Earth earth("../models/earth(1).glb", "../images/2k_earth_daymap.jpg", "../images/2k_earth_nightmap.jpg", "../images/2k_earth_clouds.jpg", 4.01f, AU * 1.0f, 10.0f, 10.0f, 23.5f, 0.98f,
+    Earth earth("../models/earth(1).glb", "../images/2k_earth_daymap.jpg", "../images/2k_earth_nightmap.jpg", "../images/2k_earth_clouds.jpg", "../images/earthspec1k.jpg", 4.01f, AU * 1.0f, 10.0f, 10.0f, 23.5f, 0.98f,
                  true, 10.0f, glm::vec4(0.9f, 0.5f, 0.8f, 0.5f));
 
     Planet mars("../models/24881_Mars_1_6792.glb", 0.0053f, AU * 1.52f, 5.0f, 10.0f, 25.2f,
