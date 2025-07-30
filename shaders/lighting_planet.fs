@@ -7,25 +7,27 @@ in vec2 TexCoords;
 
 uniform vec3 lightPos;
 uniform vec3 viewPos;
-uniform sampler2D texture_diffuse1;
+
+uniform sampler2D texture_diffuse;
 
 void main()
 {
     vec3 lightColor = vec3(1.0, 1.0, 0.95); 
 
+    vec3 norm = normalize(Normal);
+    vec3 lightDir = normalize(lightPos - FragPos);
+    vec3 viewDir = normalize(viewPos - FragPos);
+
     // Ambient
-    float ambientStrength = 0.1;
+    float ambientStrength = 0.05;
     vec3 ambient = ambientStrength * lightColor;
 
     // Diffuse
-    vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(lightPos - FragPos);
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = diff * lightColor;
 
     // Specular
     float specularStrength = 0.2;
-    vec3 viewDir = normalize(viewPos - FragPos);
     vec3 halfwayDir = normalize(lightDir + viewDir);
     float spec = pow(max(dot(norm, halfwayDir), 0.0), 1.0); // last value is shininess
     vec3 specular = specularStrength * spec * lightColor;
@@ -39,7 +41,7 @@ void main()
     // "Darkness" to not light front with rimlighting
     float darkness = 1.0 - diff;
 
-    vec3 objectColor = texture(texture_diffuse1, TexCoords).rgb;
+    vec3 objectColor = texture(texture_diffuse, TexCoords).rgb;
 
     vec3 result = (ambient + diffuse) * objectColor + specular + (0.1 * rimColor * darkness);
     FragColor = vec4(result, 1.0);

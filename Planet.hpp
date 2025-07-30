@@ -1,144 +1,151 @@
 #ifndef INCLUDE_SOLAR_SYSTEM_PLANET_HPP_
 #define INCLUDE_SOLAR_SYSTEM_PLANET_HPP_
 
-#include <glm/ext/matrix_transform.hpp>
-#include <glm/trigonometric.hpp>
 #include <string>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "Model.hpp"
 #include "Shader.hpp"
 
-#include <GLFW/glfw3.h>
-
+/**
+ * @class Planet
+ * @brief Represents a celestial body with orbital and rotational properties
+ *
+ * This class encapsulates a 3D model and adds behavior to make it
+ * act like a planet. It handles position, rotation, and scale over time.
+ */
 class Planet {
 public:
+    /**
+     * @brief Constructs a Planet
+     * @param modelPath Path to 3D model file.
+     * @param scale Uniform scale of the planet.
+     * @param orbitalRadius Average radius of the orbit.
+     * @param orbitalSpeed Speed at which the planet orbits the origin.
+     * @param axialSpeed Speed at which the planet rotates on its own axis.
+     * @param axialTiltAngle Planetary axial tilt in degrees.
+     * @param ellipticity Ratio of the orbit's minor to major axis (1.0 for a perfect circle).
+     * @param hasGlow Whether the planet should have an atmospheric glow effect.
+     * @param glowScale Size of the glow billboard.
+     * @param glowTint Color of the glow.
+     */
     Planet(const std::string& modelPath,
            float scale,
            float orbitalRadius,
            float orbitalSpeed,
            float axialSpeed,
            float axialTiltAngle,
+           float ellipticity = 1.0f,
            bool hasGlow = false,
            float glowScale = 0.0f,
-           glm::vec4 glowTint = glm::vec4(0.0f),
-           float ellipticity = 1.0f)
-        : model(modelPath),
-          p_Scale(scale),
-          p_OrbitalRadius(orbitalRadius),
-          p_OrbitalSpeed(orbitalSpeed * 0.025), // Changed rate here
-          p_AxialSpeed(axialSpeed),
-          p_AxialTiltAngle(axialTiltAngle),
-          p_hasGlow(hasGlow),
-          p_glowScale(glowScale),
-          p_glowTint(glowTint),
-          p_Ellipticity(ellipticity) {}
+           glm::vec4 glowTint = glm::vec4(0.0f))
+        : m_model(modelPath),
+          m_scale(scale),
+          m_orbitalRadius(orbitalRadius),
+          m_orbitalSpeed(orbitalSpeed * 0.025), // Changed rate here
+          m_axialSpeed(axialSpeed),
+          m_axialTiltAngle(axialTiltAngle),
+          m_ellipticity(ellipticity),
+          m_hasGlow(hasGlow),
+          m_glowScale(glowScale),
+          m_glowTint(glowTint)
+    {}
+
+    virtual ~Planet() = default;
+
+    // Move
+    Planet (Planet&& other) noexcept = default;
+    Planet& operator=(Planet&& other) noexcept = default;
+
+    // copy
+    Planet(const Planet&) = delete;
+    Planet& operator=(const Planet&) = delete;
+
+
+    /**
+     * @brief Updates the planet's state for the current frame.
+     * @param time Current application time
+     *
+     * This calculates the new model matrix based on the planet's orbital
+     * and rotational properties
+     */
+    void Update(float time) {
+        glm::mat4 model = glm::mat4(1.0f);
+
+        // Orbital position
+        float angle = time * m_orbitalSpeed;
+        float x = m_orbitalRadius * glm::cos(angle);
+        float z = m_orbitalRadius * m_ellipticity * glm::sin(angle);
+        model = glm::translate(model, glm::vec3(x, 0.0f, z));
+
+        // Axial Rotation
+        model = glm::rotate(model, glm::radians(time * m_axialSpeed), glm::vec3(0.0f, 1.0f, 0.0f));
+
+        // Axial tilt
+        model = glm::rotate(model, glm::radians(m_axialTiltAngle), glm::vec3(0.0f, 0.0f, 1.0f));
+
+        // Scale
+        m_modelMatrix = glm::scale(model, glm::vec3(m_scale));
+    }
 
     /**
      * @brief Calculates and returns the model matrix
      */
-    glm::mat4 getModelMatrix() {
-        glm::mat4 modelMatrix = glm::mat4(1.0f);
-
-        // Zeitabhängiger Winkel (Bogenmaß)
-        float angle = static_cast<float>(glfwGetTime()) * p_OrbitalSpeed;
-
-        // Elliptische Umlaufbahn
-        float x = p_OrbitalRadius * glm::cos(angle);
-        float z = p_OrbitalRadius * p_Ellipticity * glm::sin(angle);
-        modelMatrix = glm::translate(modelMatrix, glm::vec3(x, 0.0f, z));
-
-        // Axial Tilt (z.B. Erdneigung 23.5°)
-        modelMatrix = glm::rotate(modelMatrix, glm::radians(p_AxialTiltAngle), glm::vec3(0.0f, 0.0f, 1.0f));
-
-        // Rotation um eigene Achse (Tagesrotation)
-        modelMatrix = glm::rotate(modelMatrix,
-                                  glm::radians(static_cast<float>(glfwGetTime()) * p_AxialSpeed),
-                                  glm::vec3(0.0f, 1.0f, 0.0f));
-
-        // Skalierung des Planeten
-        modelMatrix = glm::scale(modelMatrix, glm::vec3(p_Scale));
-
-        return modelMatrix;
+    glm::mat4 getModelMatrix() const {
+        return m_modelMatrix;
     }
 
     /**
      * @brief Draws the planet model itself.
+     * @param shader Shader to use for drawing
+     *
+     * This assumes Update() has already been called for the current frame
      */
     virtual void Draw(Shader& shader) {
-        // Set the overall model matrix once
-        glm::mat4 modelMatrix = getModelMatrix();
-        shader.setMat4("model", modelMatrix);
-
-        // Loop through each mesh in the model
-        for (unsigned int i = 0; i < model.meshes.size(); i++) {
-            Mesh& mesh = model.meshes[i]; // Get a reference to the current mesh
-
-            // --- Bind textures FOR THIS MESH ONLY ---
-            unsigned int diffuseNr = 1;
-            unsigned int specularNr = 1;
-            for (unsigned int j = 0; j < mesh.textures.size(); j++) {
-                glActiveTexture(GL_TEXTURE0 + j);
-
-                std::string number;
-                std::string name = mesh.textures[j].type;
-                if(name == "texture_diffuse")
-                    number = std::to_string(diffuseNr++);
-                else if (name == "texture_specular")
-                    number = std::to_string(specularNr++);
-
-                // Set the sampler uniform. Note: You may need to adapt your
-                // generic planet shader to handle uniforms like "texture_diffuse1"
-                shader.setInt((name + number).c_str(), j);
-                glBindTexture(GL_TEXTURE_2D, mesh.textures[j].id);
-            }
-
-            // --- IMMEDIATELY draw this mesh ---
-            // Now that the correct textures are bound, draw the current mesh's geometry.
-            mesh.Draw();
-        }
-
-        // Reset the active texture unit when done
-        glActiveTexture(GL_TEXTURE0);
+        shader.setMat4("model", m_modelMatrix);
+        m_model.Draw(shader);
     }
 
     /**
      * @brief Draws the glow effect if enabled.
+     * @param glowShader Shader for glow billboard
+     * @param view Camera view matrix
      */
     void DrawGlow(Shader& glowShader, const glm::mat4& view) {
-        if (!p_hasGlow) return;
+        if (!m_hasGlow) return;
 
-        // Weltposition des Planeten bestimmen
         glm::vec3 planetPos = glm::vec3(getModelMatrix() * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 
-        // Billboard-Matrix: Position + Ansicht aus View-Matrix extrahiert
+        // Billboard matrix
         glm::mat4 glowModelMatrix = glm::translate(glm::mat4(1.0f), planetPos);
-        glowModelMatrix *= glm::transpose(glm::mat4(glm::mat3(view))); // Nur Rotation
-        glowModelMatrix = glm::scale(glowModelMatrix, glm::vec3(p_glowScale));
+        glowModelMatrix *= glm::transpose(glm::mat4(glm::mat3(view)));
+        glowModelMatrix = glm::scale(glowModelMatrix, glm::vec3(m_glowScale));
 
         glowShader.setMat4("model", glowModelMatrix);
-        glowShader.setVec4("glowTint", p_glowTint);
+        glowShader.setVec4("glowTint", m_glowTint);
 
-        // Zeichnen (Quad in Hauptprogramm setzen)
+        // Actual draw call is in main loop
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     }
 
 protected:
-    Model model;
+    Model m_model;
+    glm::mat4 m_modelMatrix;
 
-    float p_Scale;
-    float p_OrbitalRadius;
-    float p_OrbitalSpeed;
-    float p_AxialSpeed;
-    float p_AxialTiltAngle;
+    float m_scale;
+    float m_orbitalRadius;
+    float m_orbitalSpeed;
+    float m_axialSpeed;
+    float m_axialTiltAngle;
+    float m_ellipticity;
 
     // Glow properties
-    bool p_hasGlow;
-    float p_glowScale;
-    glm::vec4 p_glowTint;
+    bool m_hasGlow;
+    float m_glowScale;
+    glm::vec4 m_glowTint;
 
-    float p_Ellipticity; // Verhältnis b/a der Ellipse (z. B. 0.8)
 };
 
 #endif  // INCLUDE_SOLAR_SYSTEM_PLANET_HPP_

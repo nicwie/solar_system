@@ -22,3 +22,4 @@ void main() {
     v_ModelSpacePos = aPos;
     gl_Position = projection * view * model * vec4(aPos, 1.0);
 }
+

@@ -127,7 +127,7 @@ public:
     }
 
     /**
-     * process input from keyboard-like
+     * @brief process input from keyboard-like
      * @param direction The movement direction
      * @param deltaTime time between current and last frame
      */

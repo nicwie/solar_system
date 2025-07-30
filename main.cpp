@@ -14,7 +14,6 @@
  */
 
 // STL
-#include <cstddef>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -36,6 +35,7 @@
 // Project headers
 #include "Camera.hpp"
 #include "Shader.hpp"
+#include "Model.hpp"
 #include "Planet.hpp"
 #include "Earth.hpp"
 #include "Skybox.hpp"
@@ -91,7 +91,7 @@ int main(void) {
     // Shaders
     Shader earthShader("../shaders/lighting_earth.vs", "../shaders/lighting_earth.fs");
     Shader planetShader("../shaders/lighting_planet.vs", "../shaders/lighting_planet.fs");
-    Shader sunShader("../shaders/lighting_planet.vs", "../shaders/lighting_sun.fs");
+    Shader sunShader("../shaders/lighting_sun.vs", "../shaders/lighting_sun.fs");
     Shader skyboxShader("../shaders/skybox.vs", "../shaders/skybox.fs");
     Shader glowShader("../shaders/glow.vs", "../shaders/glow.fs");
     glCheckError();
@@ -103,29 +103,29 @@ int main(void) {
         float orbitSpeed;
         float rotationSpeed;
         float axialTilt;
+        float ellipticity;
         bool hasGlow;
         float glowScale;
         glm::vec4 glowColor;
-        float ellipticity;
     };
 
     std::vector<PlanetInfo> planetData = {
-        {"../models/Mercury_1_4878.glb", 0.0038f, 0.39f, 42.0f, 10.0f, 0.03f, false, 0.0f, {}, 0.8f},
-        {"../models/Venus_1_12103.glb", 0.0095f, 0.72f, 16.0f, 10.0f, 177.4f, false, 0.0f, {}, 0.95f},
-        {"../models/24881_Mars_1_6792.glb", 0.0053f, 1.52f, 5.0f, 10.0f, 25.2f, true, 5.0f, glm::vec4(0.9f, 0.4f, 0.2f, 0.4f), 0.92f},
-        {"../models/Jupiter_1_142984.glb", 0.112f, 5.20f, 1.0f, 10.0f, 3.1f, false, 0.0f, {}, 0.96f},
-        {"../models/Saturn_1_120536.glb", 0.093f, 9.58f, 0.6f, 10.0f, 26.7f, false, 0.0f, {}, 0.95f},
-        {"../models/Uranus_1_51118.glb", 0.04f, 19.2f, 0.2f, 10.0f, 97.8f, false, 0.0f, {}, 0.94f},
-        {"../models/Neptune_1_49528.glb", 0.038f, 30.1f, 0.1f, 10.0f, 28.3f, false, 0.0f, {}, 0.96f}
+        {"../models/Mercury_1_4878.glb", 0.0038f, 0.39f, 42.0f, 10.0f, 0.03f, 0.8f, false, 0.0f, {}},
+        {"../models/Venus_1_12103.glb", 0.0095f, 0.72f, 16.0f, 10.0f, 177.4f, 0.95f, false, 0.0f, {}},
+        {"../models/24881_Mars_1_6792.glb", 0.0053f, 1.52f, 5.0f, 10.0f, 25.2f, 0.92f, true, 5.0f, glm::vec4(0.9f, 0.4f, 0.2f, 0.4f)},
+        {"../models/Jupiter_1_142984.glb", 0.112f, 5.20f, 1.0f, 10.0f, 3.1f, 0.96f, false, 0.0f, {}},
+        {"../models/Saturn_1_120536.glb", 0.093f, 9.58f, 0.6f, 10.0f, 26.7f, 0.95f, false, 0.0f, {}},
+        {"../models/Uranus_1_51118.glb", 0.04f, 19.2f, 0.2f, 10.0f, 97.8f, 0.94f, false, 0.0f, {}},
+        {"../models/Neptune_1_49528.glb", 0.038f, 30.1f, 0.1f, 10.0f, 28.3f, 0.96f, false, 0.0f, {}}
     };
 
     std::vector<Planet> planets;
     for (const auto& data : planetData) {
         planets.emplace_back(data.modelPath, data.scale, ASTRONOMICAL_UNIT * data.orbitRadius, data.orbitSpeed, data.rotationSpeed,
-                             data.axialTilt, data.hasGlow, data.glowScale, data.glowColor, data.ellipticity);
+                             data.axialTilt, data.ellipticity, data.hasGlow, data.glowScale, data.glowColor);
     }
 
-    Planet sun ("../models/Sun_1_1391000.glb", 50.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+    Planet sun ("../models/Sun_1_1391000.glb", 50.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, true, 65.0f, glm::vec4(1.0, 1.0, 0.7, 0.8f));
 
     Earth earth("../models/earth(1).glb", "../images/2k_earth_daymap.jpg", "../images/2k_earth_nightmap.jpg",
                 "../images/2k_earth_clouds.jpg", "../images/earthspec1k.jpg", 4.01f, ASTRONOMICAL_UNIT * 1.0f, 10.0f, 10.0f, 23.5f, 0.98f,
@@ -135,14 +135,12 @@ int main(void) {
 
     //Load skybox & glow
     Skybox skybox("../images/8k_stars_milky_way.jpg");
-
     skyboxShader.use();
     skyboxShader.setInt("equirectangularMap", 0);
 
-    glCheckError();
-
     unsigned int glowVAO, glowTexture;
     setUpGlowEffect(glowVAO, glowTexture, glowShader);
+    glCheckError();
 
     // Render loop
     while (!glfwWindowShouldClose(window)) {
@@ -153,6 +151,13 @@ int main(void) {
 
         // input
         processInput(window);
+
+        // Update state of all objects
+        sun.Update(currentFrame);
+        earth.Update(currentFrame);
+        for (auto& planet : planets) {
+            planet.Update(currentFrame);
+        }
 
         // Camera orbiting logic
         if (camera.isOrbiting) {
@@ -186,6 +191,7 @@ int main(void) {
         glBindTexture(GL_TEXTURE_2D, glowTexture);
         glBindVertexArray(glowVAO);
 
+        sun.DrawGlow(glowShader, view);
         earth.DrawGlow(glowShader, view);
         for (auto& planet: planets) {
             planet.DrawGlow(glowShader, view);
@@ -200,13 +206,15 @@ int main(void) {
         sunShader.setMat4("projection", projection);
         sunShader.setMat4("view", view);
         sun.Draw(sunShader);
+        sunShader.setVec3("viewPos", camera.Position);
+        sunShader.setFloat("u_time", currentFrame);
 
         // Earth
         earthShader.use();
         earthShader.setMat4("projection", projection);
         earthShader.setMat4("view", view);
         earthShader.setVec3("lightPos", sunPos);
-        earthShader.setFloat("u_time", (float)glfwGetTime());
+        earthShader.setFloat("u_time", currentFrame);
         earth.Draw(earthShader);
 
         // Other planets

@@ -1,14 +1,16 @@
 #ifndef MESH_HPP
 #define MESH_HPP
 
-#include <assimp/types.h>
-#include <cstddef>
+#include <vector>
+#include <string>
+#include <utility>
+
 #include <glm/common.hpp>
 #include <glm/glm.hpp>
-#include <string>
-#include <vector>
+
 #include "Shader.hpp"
 
+// Represents a single vertex
 struct Vertex {
     glm::vec3 Position;
     glm::vec3 Normal;
@@ -21,30 +23,105 @@ struct Texture {
     std::string path;
 };
 
+/**
+ * @class Mesh
+ * @brief Represents a single drawable entity
+ *
+ * A collection of vertices, indices, and textures that make up a part of a 3D model
+ * Handles the setup of OpenGL buffers and contains logic to draw itself.
+ */
 class Mesh {
 public:
-    //mesh  data
+    // Mesh  data
     std::vector<Vertex>       vertices;
     std::vector<unsigned int> indices;
     std::vector<Texture>      textures;
+    unsigned int VAO;
 
-    Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures) {
-        this->vertices = vertices;
-        this->indices = indices;
-        this->textures = textures;
-
+    /**
+     * @brief Constructs a mesh
+     * @param vertices A vector of vertices of the mesh
+     * @param indices A vector of indices for indexed drawing
+     * @param textures A vector of textures used by the mesh
+     */
+    Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures) : vertices(std::move(vertices)), indices(std::move(indices)), textures(std::move(textures)) {
         setupMesh();
     }
+
     /**
-     * @brief Draws vertices of meshes
+     * @brief Cleans up buffers and attribute pointers
      */
-    void Draw() {
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
+    ~Mesh() {
+        glDeleteVertexArrays(1, &VAO);
+        glDeleteBuffers(1, &VBO);
+        glDeleteBuffers(1, &EBO);
     }
+
+    // We do not want to copy meshes
+    Mesh(const Mesh&) = delete;
+    Mesh& operator=(const Mesh&) = delete;
+
+    // Move semantics
+    Mesh(Mesh&& other) noexcept
+        : vertices(std::move(other.vertices)), indices(std::move(other.indices)),
+        textures(std::move(other.textures)), VAO(other.VAO), VBO(other.VBO), EBO(other.EBO) {
+        other.VAO = 0;
+        other.VBO = 0;
+        other.EBO = 0;
+    }
+
+    Mesh& operator=(Mesh&& other) noexcept {
+        if (this != &other) {
+            glDeleteVertexArrays(1, &VAO);
+            glDeleteBuffers(1, &VBO);
+            glDeleteBuffers(1, &EBO);
+
+            vertices = std::move(other.vertices);
+            indices = std::move(other.indices);
+            textures = std::move(other.textures);
+            VAO = other.VAO;
+            VBO = other.VBO;
+            EBO = other.EBO;
+
+            other.VAO = 0;
+            other.VBO = 0;
+            other.EBO = 0;
+        }
+        return *this;
+    }
+
+
+    /**
+    * @brief Renders the mesh
+    * @param shader The shader program to use
+    *
+    * This method activates the shader, binds the necessary textures,
+    * and issues the final draw call
+    */
+    void Draw(Shader &shader) {
+        unsigned int diffuseNR  = 1;
+        unsigned int specularNR = 1;
+        unsigned int normalNr   = 1;
+        unsigned int heightNr   = 1;
+
+        for (unsigned int i = 0; i < textures.size(); i++) {
+            glActiveTexture(GL_TEXTURE0 + i);
+            std::string name = textures[i].type;
+
+            shader.setInt(name, i);
+            glBindTexture(GL_TEXTURE_2D, textures[i].id);
+        }
+
+        // Draw mesh
+        glBindVertexArray(VAO);
+        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+
+        glActiveTexture(GL_TEXTURE0);
+    }
+
 private:
-    unsigned int VAO, VBO, EBO;
+    unsigned int VBO, EBO;
 
     void setupMesh() {
         glGenVertexArrays(1, &VAO);

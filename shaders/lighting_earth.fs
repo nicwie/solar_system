@@ -3,14 +3,14 @@ out vec4 FragColor;
 
 // Data from Vertex Shader
 in vec3 FragPos;
-in vec3 Normal; // We still use this for LIGHTING
-in vec3 v_ModelSpacePos; // CHANGED: We now get position instead of normal
+in vec3 Normal;
+in vec3 v_ModelSpacePos;
 
 // Textures
 uniform sampler2D texture_day;
 uniform sampler2D texture_night;
 uniform sampler2D texture_clouds;
-uniform sampler2D texture_specMap;
+uniform sampler2D texture_specular;
 
 // Uniforms
 uniform vec3 lightPos;
@@ -72,7 +72,7 @@ void main()
     // SAMPLE SURFACE AND CLOUDS
     vec3 dayColor = textureGrad(texture_day, finalTexCoords, dUVdx, dUVdy).rgb;
     vec3 nightColor = textureGrad(texture_night, finalTexCoords, dUVdx, dUVdy).rgb;
-    float specStrength = textureGrad(texture_specMap, finalTexCoords, dUVdx, dUVdy).r;
+    float specStrength = textureGrad(texture_specular, finalTexCoords, dUVdx, dUVdy).r;
 
     float cloud_u_scrolling = fract(finalTexCoords.x + u_time * 0.03);
     vec2 cloudTexCoords = vec2(cloud_u_scrolling, v);
