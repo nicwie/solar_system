@@ -3,6 +3,8 @@ out vec4 FragColor;
 
 in vec3 TexCoords;
 
+// to avoid warning
+uniform sampler2D texture_diffuse;
 uniform sampler2D equirectangularMap;
 
 const vec2 invAtan = vec2(0.1591, 0.3183); // 1/2PI, 1/PI
