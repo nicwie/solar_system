@@ -3,7 +3,6 @@ project(solar_system)
 
 cmake_policy(SET CMP0072 NEW)
 
-# Set the C++ standard
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -25,7 +24,7 @@ target_include_directories(
 target_link_libraries(solar_system PRIVATE OpenGL::GL glfw GLEW::GLEW
                                            ${ASSIMP_LIBRARIES})
 
-# --- OPTIONAL: CUSTOM TARGET TO RUN THE PROGRAM ---
+# --- CUSTOM TARGET TO RUN THE PROGRAM ---
 add_custom_target(
   run_solar_system
   COMMAND $<TARGET_FILE:solar_system>
