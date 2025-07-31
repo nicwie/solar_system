@@ -191,7 +191,7 @@ private:
     * @param modelPath Full path to parent model file, for caching
     * @return A vector of loaded Texture objects
     */
-    std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName, 
+    std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName,
                                               const aiScene *scene, const std::string& modelPath) {
         std::vector<Texture> textures;
         for(unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
@@ -304,7 +304,7 @@ inline unsigned int TextureFromFile(const char *path, const std::string &directo
         if (nrComponents == 1) format = GL_RED;
         else if (nrComponents == 3) format = GL_RGB;
         else if (nrComponents == 4) format = GL_RGBA;
-        else { 
+        else {
              stbi_image_free(data);
              glDeleteTextures(1, &textureID);
              return 0;

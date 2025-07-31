@@ -6,7 +6,7 @@ layout (location = 2) in vec2 aTexCoords; // unused
 // Pass-throughs to the fragment shader
 out vec3 FragPos;
 out vec3 Normal;
-out vec3 v_ModelSpacePos; 
+out vec3 v_ModelSpacePos;
 out vec2 TexCoords;
 
 uniform mat4 model;
